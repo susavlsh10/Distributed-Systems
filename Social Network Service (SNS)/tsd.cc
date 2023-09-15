@@ -91,7 +91,7 @@ std::vector<Post> readPostsFromFile(const std::string& filename) {
     std::ifstream inputFile(filename);
 
     if (!inputFile) {
-        std::cerr << "Failed to open " << filename << std::endl;
+        std::cerr << "File empty: " << filename << std::endl;
         return {}; // Return an empty vector if the file cannot be opened
     }
 
@@ -102,7 +102,6 @@ std::vector<Post> readPostsFromFile(const std::string& filename) {
     while (std::getline(inputFile, line)) {
         if (line.empty()) {
             // An empty line indicates the end of a post entry
-            // Add the currentPost to the vector
             posts.push_back(currentPost);
             currentPost = {}; // Clear currentPost for the next entry
         } else if (line[0] == 'T') {
@@ -130,7 +129,7 @@ void appendPostToFile(const std::string& time, const std::string& user, const st
     }
 
     // Append the formatted data to the file
-    outputFile << "T " << time; // 
+    outputFile << "T " << time << "\n"; // 
     outputFile << "U " << user << "\n";
     outputFile << "W " << post << "\n";
     outputFile << "\n"; // Empty line to separate entries
@@ -308,7 +307,6 @@ class SNSServiceImpl final : public SNSService::Service {
 		ServerReaderWriter<Message, Message>* stream) override {
 
       Message m;
-
       while (stream->Read(&m)){
         std::string user_name = m.username();
         int client_idx = clientMap[user_name];
@@ -325,31 +323,38 @@ class SNSServiceImpl final : public SNSService::Service {
           client_db[client_idx].connected = true;
 
           // read the latest 20 posts from the persistent storage
-
-        }
-        else{ // if the user is making a new post 
-          appendPostToFile(m.timestamp().DebugString(), user_name, m.msg(), client_db[client_idx].user_file);
           std::vector<Post> posts = readPostsFromFile(client_db[client_idx].user_following_file);
-
           std::cout << "Read from file " << client_db[client_idx].user_following_file << std::endl;
+
+          if (posts.size()){
+            std::cout << "Size of posts = " << posts.size() << std::endl;
           
-          //send the same message back to the user timeline
-          stream->Write(m);
-          /*
           // create a Message for each text and write it back to the stream
-          for(const Post& post: posts){
-            // create a message
+          int start_idx = 0;
+          if (posts.size()> 20) {start_idx = posts.size() - 20;}
+          
+          for(int i = start_idx; i< posts.size(); i++){
+            Post post = posts[i];
             Message new_msg;
-            google::protobuf::Timestamp timestamp;
             new_msg.set_username(post.user);
             new_msg.set_msg(post.post);
-            
-            timestamp.ParseFromString(post.time);
-            new_msg.set_allocated_timestamp(&timestamp);
+
+            google::protobuf::Timestamp* timestamp = new google::protobuf::Timestamp();
+            timestamp->set_seconds(std::stoll(post.time));
+            timestamp->set_nanos(0);
+            new_msg.set_allocated_timestamp(timestamp);
+
             stream->Write(new_msg);
+            }
+
           }
-          
-          */
+        }
+        else{ // if the user is making a new post 
+          auto t_seconds = m.timestamp().seconds();
+          appendPostToFile(std::to_string(t_seconds), user_name, m.msg(), client_db[client_idx].user_file);
+
+          //send the same message back to the user timeline
+          stream->Write(m);
 
           // write to all the clients who follow the current user
           for (const Client* _client:  client_db[client_idx].client_followers){
@@ -360,12 +365,9 @@ class SNSServiceImpl final : public SNSService::Service {
             }
 
             //append to formatted message _client_following.txt 
-            appendPostToFile(m.timestamp().DebugString(), user_name, m.msg(), _client->user_following_file);
+            appendPostToFile(std::to_string(t_seconds), user_name, m.msg(), _client->user_following_file);
           }
-
         }
-
-
       }
     
     return Status::OK;

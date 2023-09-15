@@ -1,4 +1,0 @@
-T seconds: 1694737765
-U user3
-W hello
-
