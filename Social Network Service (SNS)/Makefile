@@ -71,7 +71,7 @@ tsd: sns.pb.o sns.grpc.pb.o tsd.o
 	$(PROTOC) -I $(PROTOS_PATH) --cpp_out=. $<
 
 clean:
-	rm -f *~ *.o *.pb.cc *.pb.h tsc tsd
+	rm -f *~ *.o *.pb.cc *.pb.h tsc tsd sns_storage/*.txt
 
 
 # The following is to test your system and ensure a smoother experience.

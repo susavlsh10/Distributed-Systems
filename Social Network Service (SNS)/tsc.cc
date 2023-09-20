@@ -202,6 +202,12 @@ IReply Client::List() {
     for (const std::string& user: all_followers){
       ire.followers.push_back(user);
     }
+
+    auto all_following = list_reply.following();
+    for (const std::string& user: all_following){
+      ire.following.push_back(user);
+    }
+
   }
   else{
     ire.comm_status = IStatus::FAILURE_INVALID;
@@ -225,11 +231,14 @@ IReply Client::Follow(const std::string& username2) {
 
   if (status.ok()){
     if (follow_reply.msg() == "Follow successful"){
-      std::cout << "Following " << username2 <<std::endl;
+      //std::cout << "Following " << username2 <<std::endl;
       ire.comm_status = IStatus::SUCCESS;
     }
+    else if(follow_reply.msg() == "Already following"){
+      ire.comm_status = IStatus::FAILURE_ALREADY_EXISTS;
+    }
     else{
-      std::cout << follow_reply.msg() <<std::endl;
+      //std::cout << follow_reply.msg() <<std::endl;
       ire.comm_status = IStatus::FAILURE_INVALID_USERNAME;
     }
 
@@ -255,12 +264,13 @@ IReply Client::UnFollow(const std::string& username2) {
 
   if (status.ok()){
     if (unfollow_reply.msg() == "Unfollow successful"){
-      // /std::cout << "Unfollowing " << username2 <<std::endl;
       ire.comm_status = IStatus::SUCCESS;
-      std::cout << "Unfollowed " << username2 <<std::endl;
+    }
+    else if (unfollow_reply.msg() =="Not a follower"){
+      ire.comm_status = IStatus::FAILURE_NOT_A_FOLLOWER;
     }
     else{
-      std::cout << unfollow_reply.msg() <<std::endl;
+      //std::cout << unfollow_reply.msg() <<std::endl;
       ire.comm_status = IStatus::FAILURE_INVALID_USERNAME;
     }
 
@@ -288,8 +298,8 @@ IReply Client::Login() {
       }
       else{
         ire.comm_status = IStatus::SUCCESS;
-        std::cout << "Response from server : "<< reply.msg() << std::endl;
-        std::cout << "Client added to server." <<std::endl;
+        //std::cout << "Response from server : "<< reply.msg() << std::endl;
+        //std::cout << "Client added to server." <<std::endl;
       }
     }
     else {
@@ -324,6 +334,8 @@ void Client::Timeline(const std::string& username) {
   ClientContext context;
   std::shared_ptr<ClientReaderWriter<Message, Message>> stream(stub_->Timeline(&context));
 
+  std::cout << "========= Timeline mode =========" <<std::endl;
+
   std::thread writer([stream, username] (){
     std::string input_text;
     Message msg;
@@ -345,7 +357,7 @@ void Client::Timeline(const std::string& username) {
     Message read_msg;
     while(stream->Read(&read_msg)){
       auto time_int = read_msg.timestamp().seconds();
-      std::cout << "Incoming message :  " << std::endl;
+      //std::cout << "Incoming message :  " << std::endl;
       displayPostMessage(read_msg.username(), read_msg.msg(), time_int);
     }
   });

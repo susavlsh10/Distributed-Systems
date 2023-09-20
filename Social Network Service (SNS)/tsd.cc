@@ -150,18 +150,24 @@ class SNSServiceImpl final : public SNSService::Service {
   Status List(ServerContext* context, const Request* request, ListReply* list_reply) override {
 
   auto user_name = request->username();
-  //auto all_users = list_reply->mutable_all_users();
+  list_reply->add_following(user_name); //add the current user as a follower
 
   for(const Client& client: client_db)
   {  
     auto user = client.username; //current client in the database
     list_reply->add_all_users(user);
+    
   
     if (user == user_name){
-      // copy the following list
+      // copy the follower list
       for(const Client* _client: client.client_followers){
-        std::cout << "Followers exists" <<std::endl;
+        //std::cout << "Followers exists" <<std::endl;
         list_reply->add_followers(_client->username);
+      }
+      // copy the following list
+      for(const Client* _client: client.client_following){
+        //std::cout << "Followers exists" <<std::endl;
+        list_reply->add_following(_client->username);
       }
     }
   }
@@ -179,7 +185,7 @@ class SNSServiceImpl final : public SNSService::Service {
     bool follow = true;
     // check if user_name is not attempting to follow user_name
     if (user_name == follow_name){ 
-      reply->set_msg("Invalid username");
+      reply->set_msg("Already following");
       return Status::OK;
     }
     int client_0_idx; int client_1_idx;
@@ -265,7 +271,7 @@ class SNSServiceImpl final : public SNSService::Service {
         reply->set_msg("Unfollow successful");
       }
       else{
-        reply->set_msg("Invalid username");
+        reply->set_msg("Not a follower");
       }
     }
     else{
@@ -294,12 +300,13 @@ class SNSServiceImpl final : public SNSService::Service {
       new_client.user_following_file = sns_dir + user_name + "_following.txt";
       //std::cout << "File names " <<  new_client.user_file << ", " << new_client.user_following_file << std::endl;
 
+      //save the new client in the vector database
       client_db.push_back(new_client);
       std::cout << "Client " << user_name << " added to database " <<std::endl;
+      
+      //increment the client counter
       client_count++;
-
     }
-
     return Status::OK;
   }
 
@@ -314,12 +321,11 @@ class SNSServiceImpl final : public SNSService::Service {
 
         //read the string from the Message and format it for writing
 
-        if (client_db[client_idx].connected == false){ // use enters timeline mode for the first time
+        if (client_db[client_idx].connected == false){ // user enters timeline mode for the first time
           client_db[client_idx].stream = stream;
 
           //write the string to user.txt
           std::cout << "User " << user_name << " connected to the Timeline " <<std::endl;
-          //appendPostToFile(m.timestamp().DebugString(), user_name, m.msg(), client_db[client_idx].user_file);
           client_db[client_idx].connected = true;
 
           // read the latest 20 posts from the persistent storage
@@ -333,7 +339,8 @@ class SNSServiceImpl final : public SNSService::Service {
           int start_idx = 0;
           if (posts.size()> 20) {start_idx = posts.size() - 20;}
           
-          for(int i = start_idx; i< posts.size(); i++){
+          for(int i = posts.size()-1; i>= start_idx; i--){
+          //for(int i = start_idx; i< posts.size(); i++){
             Post post = posts[i];
             Message new_msg;
             new_msg.set_username(post.user);
@@ -351,8 +358,9 @@ class SNSServiceImpl final : public SNSService::Service {
         }
         else{ // if the user is making a new post 
           auto t_seconds = m.timestamp().seconds();
-          appendPostToFile(std::to_string(t_seconds), user_name, m.msg(), client_db[client_idx].user_file);
-
+          appendPostToFile(std::to_string(t_seconds), user_name, m.msg(), client_db[client_idx].user_file); // add post to user.txt
+          appendPostToFile(std::to_string(t_seconds), user_name, m.msg(), client_db[client_idx].user_following_file); // add post to user_following.txt 
+          
           //send the same message back to the user timeline
           stream->Write(m);
 

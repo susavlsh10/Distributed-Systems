@@ -23,3 +23,7 @@ To run the client without glog messages (port number and host address are option
 To run the server with glog messages: 
 
     GLOG_logtostderr=1 ./tsc <-h host_addr -p port> -u user1
+
+To clean all the persistent post data
+
+    ./clean_sns.sh

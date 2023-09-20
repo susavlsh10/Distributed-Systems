@@ -47,6 +47,7 @@ service SNSService{
 message ListReply {
   repeated string all_users = 1;
   repeated string followers = 2;
+  repeated string following = 3;
 }
 
 message Request {

@@ -45,6 +45,7 @@ struct IReply
     enum IStatus comm_status;
     std::vector<std::string> all_users;
     std::vector<std::string> followers;
+    std::vector<std::string> following;
 };
 
 
