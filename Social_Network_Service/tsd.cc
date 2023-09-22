@@ -139,7 +139,7 @@ void appendPostToFile(const std::string& time, const std::string& user, const st
 
 
 //Vector that stores every client that has been created
-std::vector<Client> client_db;
+std::vector<Client*> client_db;
 std::unordered_map<std::string, int> clientMap;
 int client_count = 0;
 
@@ -152,20 +152,20 @@ class SNSServiceImpl final : public SNSService::Service {
   auto user_name = request->username();
   list_reply->add_following(user_name); //add the current user as a follower
 
-  for(const Client& client: client_db)
+  for(const Client* client: client_db)
   {  
-    auto user = client.username; //current client in the database
+    auto user = client->username; //current client in the database
     list_reply->add_all_users(user);
     
   
     if (user == user_name){
       // copy the follower list
-      for(const Client* _client: client.client_followers){
+      for(const Client* _client: client->client_followers){
         //std::cout << "Followers exists" <<std::endl;
         list_reply->add_followers(_client->username);
       }
       // copy the following list
-      for(const Client* _client: client.client_following){
+      for(const Client* _client: client->client_following){
         //std::cout << "Followers exists" <<std::endl;
         list_reply->add_following(_client->username);
       }
@@ -195,7 +195,7 @@ class SNSServiceImpl final : public SNSService::Service {
       client_1_idx = clientMap[follow_name];
 
       // check if user_name is already following follow_name
-      for (const Client* client: client_db[client_0_idx].client_following)
+      for (const Client* client: client_db[client_0_idx]->client_following)
       {
         if (client->username == follow_name){
           follow = false;
@@ -206,8 +206,8 @@ class SNSServiceImpl final : public SNSService::Service {
         }
       }
       if (follow){
-        client_db[client_0_idx].client_following.push_back(&client_db[client_1_idx]);
-        client_db[client_1_idx].client_followers.push_back(&client_db[client_0_idx]);
+        client_db[client_0_idx]->client_following.push_back(client_db[client_1_idx]);
+        client_db[client_1_idx]->client_followers.push_back(client_db[client_0_idx]);
         reply->set_msg("Follow successful");
         std::cout << "Follow successful" <<std::endl;
       }
@@ -238,7 +238,7 @@ class SNSServiceImpl final : public SNSService::Service {
 
       // check if user_name is following follow_name
       int idx = 0;
-      for (Client* client: client_db[client_0_idx].client_following)
+      for (Client* client: client_db[client_0_idx]->client_following)
       {
         if (client->username == unfollow_name){
           unfollow = true;
@@ -248,7 +248,7 @@ class SNSServiceImpl final : public SNSService::Service {
       }
 
       int idj = 0;
-      for (Client* client: client_db[client_1_idx].client_followers)
+      for (Client* client: client_db[client_1_idx]->client_followers)
       {
         if (client->username == user_name){
           unfollow = true;
@@ -260,12 +260,12 @@ class SNSServiceImpl final : public SNSService::Service {
       if (unfollow){
         // remove unfollow_name from user_name's following list
         std::cout << "erasing " << unfollow_name << " from " << user_name << "follow list" << std::endl;
-        client_db[client_0_idx].client_following.erase(client_db[client_0_idx].client_following.begin()+idx);
+        client_db[client_0_idx]->client_following.erase(client_db[client_0_idx]->client_following.begin()+idx);
         std::cout << "erased 1. " << std::endl;
 
         //remove user_name from unfollow_name's followers list
         std::cout << "erasing " << user_name << " from " << unfollow_name << " follow list" << std::endl;
-        client_db[client_1_idx].client_followers.erase(client_db[client_1_idx].client_followers.begin()+ idj);
+        client_db[client_1_idx]->client_followers.erase(client_db[client_1_idx]->client_followers.begin()+ idj);
         std::cout << "erased 2. " << std::endl;
 
         reply->set_msg("Unfollow successful");
@@ -294,10 +294,10 @@ class SNSServiceImpl final : public SNSService::Service {
       clientMap[user_name] = client_count;
       
       reply->set_msg("Client added to data base");
-      Client new_client;
-      new_client.username = user_name;
-      new_client.user_file = sns_dir + user_name + ".txt";
-      new_client.user_following_file = sns_dir + user_name + "_following.txt";
+      Client* new_client = new Client;
+      new_client->username = user_name;
+      new_client->user_file = sns_dir + user_name + ".txt";
+      new_client->user_following_file = sns_dir + user_name + "_following.txt";
       //std::cout << "File names " <<  new_client.user_file << ", " << new_client.user_following_file << std::endl;
 
       //save the new client in the vector database
@@ -321,16 +321,16 @@ class SNSServiceImpl final : public SNSService::Service {
 
         //read the string from the Message and format it for writing
 
-        if (client_db[client_idx].connected == false){ // user enters timeline mode for the first time
-          client_db[client_idx].stream = stream;
+        if (client_db[client_idx]->connected == false){ // user enters timeline mode for the first time
+          client_db[client_idx]->stream = stream;
 
           //write the string to user.txt
           std::cout << "User " << user_name << " connected to the Timeline " <<std::endl;
-          client_db[client_idx].connected = true;
+          client_db[client_idx]->connected = true;
 
           // read the latest 20 posts from the persistent storage
-          std::vector<Post> posts = readPostsFromFile(client_db[client_idx].user_following_file);
-          std::cout << "Read from file " << client_db[client_idx].user_following_file << std::endl;
+          std::vector<Post> posts = readPostsFromFile(client_db[client_idx]->user_following_file);
+          std::cout << "Read from file " << client_db[client_idx]->user_following_file << std::endl;
 
           if (posts.size()){
             std::cout << "Size of posts = " << posts.size() << std::endl;
@@ -358,14 +358,14 @@ class SNSServiceImpl final : public SNSService::Service {
         }
         else{ // if the user is making a new post 
           auto t_seconds = m.timestamp().seconds();
-          appendPostToFile(std::to_string(t_seconds), user_name, m.msg(), client_db[client_idx].user_file); // add post to user.txt
-          appendPostToFile(std::to_string(t_seconds), user_name, m.msg(), client_db[client_idx].user_following_file); // add post to user_following.txt 
+          appendPostToFile(std::to_string(t_seconds), user_name, m.msg(), client_db[client_idx]->user_file); // add post to user.txt
+          appendPostToFile(std::to_string(t_seconds), user_name, m.msg(), client_db[client_idx]->user_following_file); // add post to user_following.txt 
           
           //send the same message back to the user timeline
           stream->Write(m);
 
           // write to all the clients who follow the current user
-          for (const Client* _client:  client_db[client_idx].client_followers){
+          for (const Client* _client:  client_db[client_idx]->client_followers){
             // check if the client is connected in timeline mode
             if (_client->connected){
               std::cout << "Writing to stream with user message" <<std::endl;
