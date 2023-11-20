@@ -40,8 +40,13 @@ service SNSService{
   rpc List (Request) returns (ListReply) {}
   rpc Follow (Request) returns (Reply) {}
   rpc UnFollow (Request) returns (Reply) {}
+
   // Bidirectional streaming RPC
   rpc Timeline (stream Message) returns (stream Message) {} 
+
+  // sync servers
+  rpc RegisterWorker(WorkerInfo) returns (Reply) {}
+  rpc Sync(Request) returns (Reply) {}
 }
 
 message ListReply {
@@ -53,6 +58,7 @@ message ListReply {
 message Request {
   string username = 1;
   repeated string arguments = 2;
+  string type = 3;
 }
 
 message Reply {
@@ -66,4 +72,8 @@ message Message {
   string msg = 2;
   //Time the message was sent
   google.protobuf.Timestamp timestamp = 3;
+}
+
+message WorkerInfo{
+  string server_address = 1;
 }

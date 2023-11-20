@@ -1,3 +1,3 @@
 #!/bin/bash
 
-rm sns_storage/*.txt
+rm -r server*

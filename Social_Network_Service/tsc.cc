@@ -10,6 +10,11 @@
 #include "client.h"
 
 #include "sns.grpc.pb.h"
+#include<glog/logging.h>
+#define log(severity, msg) LOG(severity) << msg; google::FlushLogFiles(google::severity); 
+
+#include "coordinator.grpc.pb.h"
+
 using grpc::Channel;
 using grpc::ClientContext;
 using grpc::ClientReader;
@@ -21,6 +26,14 @@ using csce438::ListReply;
 using csce438::Request;
 using csce438::Reply;
 using csce438::SNSService;
+using csce438::CoordService;
+using csce438::Confirmation;
+using csce438::ID;
+using csce438::ServerInfo;
+
+std::unique_ptr<CoordService::Stub> coordinator_stub;
+
+ServerInfo getServerAddress(std::string coordinator_address, int userid);
 
 void sig_ignore(int sig) {
   std::cout << "Signal caught " + sig;
@@ -66,6 +79,7 @@ private:
   IReply Follow(const std::string &username);
   IReply UnFollow(const std::string &username);
   void   Timeline(const std::string &username);
+  void ReconnectServer(std::string coordinator_address, int userid);
 };
 
 
@@ -74,15 +88,8 @@ private:
 //////////////////////////////////////////////////////////
 int Client::connectTo()
 {
-  // ------------------------------------------------------------
-  // In this function, you are supposed to create a stub so that
-  // you call service methods in the processCommand/porcessTimeline
-  // functions. That is, the stub should be accessible when you want
-  // to call any service methods in those functions.
-  // Please refer to gRpc tutorial how to create a stub.
-  // ------------------------------------------------------------
-
-  std::string login_info = hostname + ":" + port;
+  //std::string login_info = hostname + ":" + port;
+  std::string login_info = hostname + port;
   auto channel = grpc::CreateChannel(login_info,
                           grpc::InsecureChannelCredentials());
   stub_ =  csce438::SNSService::NewStub(channel);
@@ -97,50 +104,6 @@ int Client::connectTo()
 
 IReply Client::processCommand(std::string& input)
 {
-  // ------------------------------------------------------------
-  // GUIDE 1:
-  // In this function, you are supposed to parse the given input
-  // command and create your own message so that you call an 
-  // appropriate service method. The input command will be one
-  // of the followings:
-  //
-  // FOLLOW <username>
-  // UNFOLLOW <username>
-  // LIST
-  // TIMELINE
-  // ------------------------------------------------------------
-  
-  // ------------------------------------------------------------
-  // GUIDE 2:
-  // Then, you should create a variable of IReply structure
-  // provided by the client.h and initialize it according to
-  // the result. Finally you can finish this function by returning
-  // the IReply.
-  // ------------------------------------------------------------
-  
-  
-  // ------------------------------------------------------------
-  // HINT: How to set the IReply?
-  // Suppose you have "FOLLOW" service method for FOLLOW command,
-  // IReply can be set as follow:
-  // 
-  //     // some codes for creating/initializing parameters for
-  //     // service method
-  //     IReply ire;
-  //     grpc::Status status = stub_->FOLLOW(&context, /* some parameters */);
-  //     ire.grpc_status = status;
-  //     if (status.ok()) {
-  //         ire.comm_status = SUCCESS;
-  //     } else {
-  //         ire.comm_status = FAILURE_NOT_EXISTS;
-  //     }
-  //      
-  //      return ire;
-  // 
-  // IMPORTANT: 
-  // For the command "LIST", you should set both "all_users" and 
-  // "following_users" member variable of IReply.
-  // ------------------------------------------------------------
 
   IReply ire;
   
@@ -289,6 +252,7 @@ IReply Client::Login() {
     ClientContext context;
 
     request.set_username(username);
+    log(INFO, " Client requesting to login");
     Status status = stub_->Login(&context, request, &reply);
 
     ire.grpc_status = status;
@@ -314,34 +278,21 @@ IReply Client::Login() {
 // Timeline Command
 void Client::Timeline(const std::string& username) {
 
-  // ------------------------------------------------------------
-  // In this function, you are supposed to get into timeline mode.
-  // You may need to call a service method to communicate with
-  // the server. Use getPostMessage/displayPostMessage functions 
-  // in client.cc file for both getting and displaying messages 
-  // in timeline mode.
-  // ------------------------------------------------------------
-
-  // ------------------------------------------------------------
-  // IMPORTANT NOTICE:
-  //
-  // Once a user enter to timeline mode , there is no way
-  // to command mode. You don't have to worry about this situation,
-  // and you can terminate the client program by pressing
-  // CTRL-C (SIGINT)
-  // ------------------------------------------------------------
-
   ClientContext context;
   std::shared_ptr<ClientReaderWriter<Message, Message>> stream(stub_->Timeline(&context));
 
-  std::cout << "========= Timeline mode =========" <<std::endl;
-
-  std::thread writer([stream, username] (){
+  
+  log(INFO, " Client attempting to enter timeline");
+  std::string input_text;
+  Message msg;
+  msg = MakeMessage(username, "Start");
+  if (stream->Write(msg))
+  {
+    std::cout << "========= Timeline mode =========" <<std::endl;
+    
+    std::thread writer([stream, username] (){
     std::string input_text;
     Message msg;
-    msg = MakeMessage(username, "Start");
-    stream->Write(msg);
-    
     while(true){
       //std::cout << "Enter text to Timeline: ";
       std::getline(std::cin, input_text);
@@ -352,22 +303,58 @@ void Client::Timeline(const std::string& username) {
     stream->WritesDone();
   });
 
-  std::thread reader([stream, username] (){
+    std::thread reader([stream, username] (){
     std::string read_text;
     Message read_msg;
     while(stream->Read(&read_msg)){
       auto time_int = read_msg.timestamp().seconds();
       //std::cout << "Incoming message :  " << std::endl;
       displayPostMessage(read_msg.username(), read_msg.msg(), time_int);
-    }
-  });
+      }
+    });
 
-  writer.join();
-  reader.join();
+    writer.join();
+    reader.join();
+  }
+}
+
+void Client::ReconnectServer(std::string coordinator_address, int userid){
+  ServerInfo info = getServerAddress(coordinator_address, userid);
+
+  //std::cout << "Reconnecting to server at : " << info.hostname() << info.port() << std::endl;
+  log(INFO, " Reconnecting to server at " + info.hostname() + info.port());
+
 
 }
 
+ServerInfo getServerAddress(std::string coordinator_address, int userid){
+  auto channel = grpc::CreateChannel(coordinator_address,
+                          grpc::InsecureChannelCredentials());
+  coordinator_stub = csce438::CoordService::NewStub(channel);
+  //std::cout << " Connecting to coordinator at : " << coordinator_address << std::endl;
+  log(INFO, " GetServer request to coordinator sent at " + coordinator_address);
+  ID request;
+  ServerInfo response;
+  ClientContext context;
 
+  request.set_id(userid);
+
+  Status status = coordinator_stub->GetServer(&context, request, &response);
+
+  if (status.ok()){ 
+    
+    if (response.type() == "None"){
+      std::cout << "Server not available at coordinator" << std::endl;
+      exit(1);
+      }
+    std::cout << "Got server from coordinator : " << response.hostname() << response.port() << std::endl;
+  }
+  else{
+    std::cout << "Error connecting to coordinator at " << coordinator_address << std::endl;
+    exit(1);
+  }
+  return response;
+}
 
 //////////////////////////////////////////////
 // Main Function
@@ -377,24 +364,43 @@ int main(int argc, char** argv) {
   std::string hostname = "localhost";
   std::string username = "default";
   std::string port = "3010";
+  
+  std::string coordinatorIP = "127.0.0.1:";
+  std::string coordinatorPort = "4000";
     
   int opt = 0;
   while ((opt = getopt(argc, argv, "h:u:p:")) != -1){
     switch(opt) {
-    case 'h':
-      hostname = optarg;break;
     case 'u':
       username = optarg;break;
     case 'p':
       port = optarg;break;
+    case 'h':
+      coordinatorIP = optarg;
+      break;
+    case 'k':
+      coordinatorPort = optarg;
+      break;
     default:
       std::cout << "Invalid Command Line Argument\n";
     }
   }
       
-  std::cout << "Logging Initialized. Client starting...";
+  std::cout << "Logging Initialized. Client starting..." <<std::endl;
   
+  // connect to coordinator and get server address
+
+  std::string coordinator_address(coordinatorIP+coordinatorPort);
+  std::string log_file_name = std::string("client-") + port;
+  google::InitGoogleLogging(log_file_name.c_str());
+  log(INFO, "Logging Initialized. Client starting...");
+  
+  ServerInfo info = getServerAddress(coordinator_address, std::stoi(username));
+  hostname = info.hostname();
+  port = info.port();
+
   Client myc(hostname, username, port);
+
   
   myc.run();
   

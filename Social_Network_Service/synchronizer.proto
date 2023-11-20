@@ -1,0 +1,35 @@
+//proto file for synchronizer 
+
+syntax = "proto3";
+
+package csce438;
+
+import "google/protobuf/timestamp.proto";
+
+// The synchronizer service definition.
+service SynchService {
+    // update user file
+    rpc SyncUsers (SyncRequest) returns (stream SyncReply) {}
+
+    // update follower file
+    rpc SyncFollowers (SyncRequest) returns (stream SyncReply) {}
+
+    // update timeline
+    rpc SyncTimeline (SyncRequest) returns (stream SyncReply) {}
+
+}
+
+// The request message containing the user's name.
+message SyncRequest {
+  string message = 1;
+  repeated string users = 2;
+  string type = 3; //follow, unfollow
+  int32 ClusterID = 4;
+}
+
+// The response message containing the greetings
+message SyncReply {
+  //string message = 1;
+  bool success = 1;
+}
+

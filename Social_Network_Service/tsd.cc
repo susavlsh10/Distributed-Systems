@@ -32,10 +32,14 @@
  */
 
 #include <ctime>
+#include <cstdlib>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #include <google/protobuf/timestamp.pb.h>
 #include <google/protobuf/duration.pb.h>
 
+#include <thread>
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -48,10 +52,19 @@
 #define log(severity, msg) LOG(severity) << msg; google::FlushLogFiles(google::severity); 
 
 #include "sns.grpc.pb.h"
+#include "coordinator.grpc.pb.h"
 #include <unordered_map>
+#include "utils.h"
 
 using google::protobuf::Timestamp;
 using google::protobuf::Duration;
+
+using grpc::Channel;
+using grpc::ClientContext;
+using grpc::ClientReader;
+using grpc::ClientReaderWriter;
+using grpc::ClientWriter;
+
 using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
@@ -64,11 +77,19 @@ using csce438::ListReply;
 using csce438::Request;
 using csce438::Reply;
 using csce438::SNSService;
+using csce438::CoordService;
+using csce438::Confirmation;
+using csce438::ID;
+using csce438::ServerInfo;
+using csce438::WorkerInfo;
 
+// global variables
+std::unique_ptr<CoordService::Stub> coordinator_stub = nullptr;
 
 struct Client {
   std::string username;
   bool connected = false;
+  bool online = false;
   int following_file_size = 0;
   std::vector<Client*> client_followers;
   std::vector<Client*> client_following;
@@ -76,160 +97,235 @@ struct Client {
   bool operator==(const Client& c1) const{
     return (username == c1.username);
   }
-  std::string user_file; // user.txt
-  std::string user_following_file; //user_following.txt
+  std::string user_file; // user.txt, 
+  std::string user_following_file; //user_following.txt, the timeline is stored here
+  std::string user_follower; // follower relationship is stored here.
+
+  void create_files(){
+    // Create empty files
+    createEmptyFile(user_file); createEmptyFile(user_following_file); createEmptyFile(user_follower);
+  };
 };
-
-
-struct Post {
-    std::string time;
-    std::string user;
-    std::string post;
-};
-
-std::vector<Post> readPostsFromFile(const std::string& filename) {
-    std::ifstream inputFile(filename);
-
-    if (!inputFile) {
-        std::cerr << "File empty: " << filename << std::endl;
-        return {}; // Return an empty vector if the file cannot be opened
-    }
-
-    std::vector<Post> posts;
-    Post currentPost;
-    std::string line;
-
-    while (std::getline(inputFile, line)) {
-        if (line.empty()) {
-            // An empty line indicates the end of a post entry
-            posts.push_back(currentPost);
-            currentPost = {}; // Clear currentPost for the next entry
-        } else if (line[0] == 'T') {
-            // Extract time
-            currentPost.time = line.substr(2); // Skip the 'T ' prefix
-        } else if (line[0] == 'U') {
-            // Extract user
-            currentPost.user = line.substr(2); // Skip the 'U ' prefix
-        } else if (line[0] == 'W') {
-            // Extract post content
-            currentPost.post += line.substr(2) + "\n"; // Skip the 'W ' prefix and add to post content
-        }
-    }
-
-    inputFile.close();
-    return posts;
-}
-
-void appendPostToFile(const std::string& time, const std::string& user, const std::string& post, const std::string& filename) {
-    std::ofstream outputFile(filename, std::ios::app); // Open the file for appending
-
-    if (!outputFile) {
-        std::cerr << "Failed to open " << filename << " for appending" << std::endl;
-        return;
-    }
-
-    // Append the formatted data to the file
-    outputFile << "T " << time << "\n"; // 
-    outputFile << "U " << user << "\n";
-    outputFile << "W " << post << "\n";
-    outputFile << "\n"; // Empty line to separate entries
-
-    outputFile.close(); // Close the file when done
-}
-
-
-//Vector that stores every client that has been created
-std::vector<Client*> client_db;
-std::unordered_map<std::string, int> clientMap;
-int client_count = 0;
 
 class SNSServiceImpl final : public SNSService::Service {
   
-  std::string sns_dir = "sns_storage/";
+  //std::string sns_dir; // = "sns_storage/";
   
-  Status List(ServerContext* context, const Request* request, ListReply* list_reply) override {
+  //Vector that stores every client that has been created
+  public:
+    std::vector<Client*> client_db;
+    std::unordered_map<std::string, int> clientMap;
+    int client_count = 0;
+    std::string ServerdirName;
+    std::string AllUsersFile;
+    bool isMaster = false;
+    bool workerConnected = false;
 
-  auto user_name = request->username();
-  list_reply->add_following(user_name); //add the current user as a follower
+    // create worker and master stubs and set to null
+    std::unique_ptr<SNSService::Stub> master_stub = nullptr;
+    std::unique_ptr<SNSService::Stub> worker_stub = nullptr;
 
-  for(const Client* client: client_db)
-  {  
-    auto user = client->username; //current client in the database
-    list_reply->add_all_users(user);
+    SNSServiceImpl(std::string clusterID, int serverID, std::string server_address){
+      // initialize SNS service
+      // send grpc message to coordinator to request for master, if master is not available, then become master
     
+      ClientContext context;
+      ID request;
+      ServerInfo s_info;
+      
+      request.set_id(serverID);
+      
+      // sleep for 1 second while coordinator_stub == nullptr
+      while (coordinator_stub == nullptr){
+        std::cout << "Waiting for coordinator stub to initialize" <<std::endl;
+        sleep(1);
+      }
+      coordinator_stub->GetCluster(&context, request, &s_info);
+      isMaster = s_info.master();
   
-    if (user == user_name){
-      // copy the follower list
-      for(const Client* _client: client->client_followers){
-        //std::cout << "Followers exists" <<std::endl;
-        list_reply->add_followers(_client->username);
-      }
-      // copy the following list
-      for(const Client* _client: client->client_following){
-        //std::cout << "Followers exists" <<std::endl;
-        list_reply->add_following(_client->username);
-      }
-    }
-  }
+      // if we are the worker, then we need to contact the master to register gRPC service for message forwarding
+      if (!isMaster){
+        // update stub
+        std::string masterAddress = s_info.hostname() + s_info.port();
+        auto channel = grpc::CreateChannel(masterAddress,
+                          grpc::InsecureChannelCredentials());
+        master_stub = csce438::SNSService::NewStub(channel);
+        std::cout << " We are the worker server. Master address : " << masterAddress << std::endl;
 
-  return Status::OK;
-  }
-
-  Status Follow(ServerContext* context, const Request* request, Reply* reply) override {
-      
-    auto user_name = request->username();
-    auto follow_list = request->arguments(); std::string follow_name = follow_list[0];
-
-    std::cout << user_name << " attempting to follow " << follow_name << std::endl;
-    
-    bool follow = true;
-    // check if user_name is not attempting to follow user_name
-    if (user_name == follow_name){ 
-      reply->set_msg("Already following");
-      return Status::OK;
-    }
-    int client_0_idx; int client_1_idx;
-    if (clientMap.find(user_name) != clientMap.end() && clientMap.find(follow_name) != clientMap.end()){
-      
-      client_0_idx = clientMap[user_name];
-      client_1_idx = clientMap[follow_name];
-
-      // check if user_name is already following follow_name
-      for (const Client* client: client_db[client_0_idx]->client_following)
-      {
-        if (client->username == follow_name){
-          follow = false;
-          reply->set_msg("Already following");
-          std::cout << user_name << " already follows " << client->username << std::endl;
-          std::cout << "follow_name = "<< follow_name << ", client->username = " << client->username << std::endl;
-          return Status::OK;
+        // call RegisterWorker RPC to the master server
+        ClientContext context;
+        WorkerInfo w_info;
+        Reply reply;
+        w_info.set_server_address(server_address);
+        Status status;
+        status = master_stub->RegisterWorker(&context, w_info, &reply);
+        if (status.ok()){
+          std::cout << "Worker registered with master" <<std::endl;
+        }
+        else{
+          std::cout << "Worker not registered with master" <<std::endl;
         }
       }
-      if (follow){
-        client_db[client_0_idx]->client_following.push_back(client_db[client_1_idx]);
-        client_db[client_1_idx]->client_followers.push_back(client_db[client_0_idx]);
-        reply->set_msg("Follow successful");
-        std::cout << "Follow successful" <<std::endl;
+      else{
+        std::cout << "We are the master server" <<std::endl;
       }
-    }
-    else{
-      reply->set_msg("Invalid username");
+
+        // recover state if available
+      RecoverState(clusterID, serverID);
+
+      // create a file called AllUsers.txt
+      AllUsersFile = ServerdirName + "AllUsers.txt";
+      createEmptyFile(AllUsersFile);
+
     }
 
-    return Status::OK; 
+  // RPC RegisterWorker
+  Status RegisterWorker(ServerContext* context, const WorkerInfo* request, Reply* reply) override {
+    std::cout << "Worker registered with master" <<std::endl;
+    // extract the server_address from the request
+    std::string workerAddress = request->server_address();
+    workerConnected = true;
+
+    // update stub
+    auto channel = grpc::CreateChannel(workerAddress,
+                          grpc::InsecureChannelCredentials());
+    worker_stub = csce438::SNSService::NewStub(channel);
+
+    return Status::OK;
   }
 
-  Status UnFollow(ServerContext* context, const Request* request, Reply* reply) override {
-    auto user_name = request->username();
-    auto unfollow_list = request->arguments(); std::string unfollow_name = unfollow_list[0];
+  // RPC Sync
+  Status Sync(ServerContext* context, const Request* request, Reply* reply) override {
+    std::cout << "Sync request received" <<std::endl;
+    // extract type of sync request
+    std::string type = request->type();
+    std::string user_name = request->username();
 
-    std::cout << user_name << " attempting to unfollow " << unfollow_name << std::endl;
+  if (type == "Login") {
+    ProcessLoginRequest(user_name, reply);
+  } else if (type == "Follow") {
+    ProcessFollowRequest(user_name, request->arguments(0), reply);
+  } else if (type == "Unfollow") {
+    ProcessUnfollowRequest(user_name, request->arguments(0), reply);
+  } else {
+    // Handle unrecognized type
+  }
+
+    return Status::OK;
+  }
+  
+  // Local function
+  void ProcessListRequest(const std::string& user_name, ListReply* list_reply) {
+    list_reply->add_following(user_name); // Add the current user as a follower
+
+    for (const Client* client : client_db) {
+      auto user = client->username; // Current client in the database
+      list_reply->add_all_users(user);
+
+      if (user == user_name) {
+        // Copy the follower list
+        for (const Client* _client : client->client_followers) {
+          list_reply->add_followers(_client->username);
+        }
+        // Copy the following list
+        for (const Client* _client : client->client_following) {
+          list_reply->add_following(_client->username);
+        }
+      }
+    }
+  }
+
+  // gRPC function
+  Status List(ServerContext* context, const Request* request, ListReply* list_reply) {
+    auto user_name = request->username();
     
+    // Call the local function to process the list request
+    ProcessListRequest(user_name, list_reply);
+
+    return Status::OK;
+  }
+
+  // Local function
+  void ProcessFollowRequest(const std::string& user_name, const std::string& follow_name, Reply* reply) {
+    std::cout << user_name << " attempting to follow " << follow_name << std::endl;
+    log(INFO, user_name + " attempting to follow " + follow_name);
+
+    // Check if user_name is not attempting to follow itself
+    if (user_name == follow_name) {
+      reply->set_msg("Already following");
+      return;
+    }
+
+    // Check if both user_name and follow_name exist in the clientMap
+    if (clientMap.find(user_name) != clientMap.end() && clientMap.find(follow_name) != clientMap.end()) {
+      int client_0_idx = clientMap[user_name];
+      int client_1_idx = clientMap[follow_name];
+
+      // Check if user_name is already following follow_name
+      for (const Client* client : client_db[client_0_idx]->client_following) {
+        if (client->username == follow_name) {
+          reply->set_msg("Already following");
+          std::cout << user_name << " already follows " << client->username << std::endl;
+          std::cout << "follow_name = " << follow_name << ", client->username = " << client->username << std::endl;
+          return;
+        }
+      }
+
+      // Add follow_name to user_name's following list and user_name to follow_name's followers list
+      client_db[client_0_idx]->client_following.push_back(client_db[client_1_idx]);
+      client_db[client_1_idx]->client_followers.push_back(client_db[client_0_idx]);
+
+      reply->set_msg("Follow successful");
+      std::cout << "Follow successful" << std::endl;
+      log(INFO, "Follow successful");
+
+      // save the follower relationship to the persistent storage
+      std::string follower_file = client_db[client_0_idx]->user_follower;
+      std::string update = "F " + follow_name;
+      appendStringToFile(follower_file, update);
+    
+    } 
+    else {
+      reply->set_msg("Invalid username");
+    }
+  }
+
+  // gRPC function
+  Status Follow(ServerContext* context, const Request* request, Reply* reply) {
+    auto user_name = request->username();
+    auto follow_name = request->arguments(0);
+
+    // Call the local function to process the follow request
+    ProcessFollowRequest(user_name, follow_name, reply);
+
+    if (isMaster && workerConnected){
+      ClientContext context;
+      Request request;
+      Reply reply;
+      request.set_username(user_name);
+      request.set_type("Follow");
+      request.add_arguments(follow_name);
+      Status status = worker_stub->Sync(&context, request, &reply);
+      if (status.ok()){
+        //std::cout << "Login request sent to all workers" <<std::endl;
+      }
+      else{
+        //std::cout << "Login request not sent to all workers" <<std::endl;
+      }
+    }
+
+    return Status::OK;
+  }
+
+  void ProcessUnfollowRequest(const std::string& user_name, const std::string& unfollow_name, Reply* reply){
+    std::cout << user_name << " attempting to unfollow " << unfollow_name << std::endl;
+    log(INFO, user_name + " attempting to follow "+ unfollow_name);
+
     bool unfollow = false;
     // check if user_name is not attempting to follow user_name
     if (user_name == unfollow_name){ 
       reply->set_msg("Invalid username");
-      return Status::OK;
+      return;
     }
     int client_0_idx; int client_1_idx;
     if (clientMap.find(user_name) != clientMap.end() && clientMap.find(unfollow_name) != clientMap.end()){
@@ -269,6 +365,11 @@ class SNSServiceImpl final : public SNSService::Service {
         std::cout << "erased 2. " << std::endl;
 
         reply->set_msg("Unfollow successful");
+
+        // save the follower relationship to the persistent storage
+        std::string follower_file = client_db[client_0_idx]->user_follower;
+        std::string update = "U " + unfollow_name;
+        appendStringToFile(follower_file, update);
       }
       else{
         reply->set_msg("Not a follower");
@@ -277,36 +378,81 @@ class SNSServiceImpl final : public SNSService::Service {
     else{
       reply->set_msg("Invalid username");
     }
+  }
+
+  Status UnFollow(ServerContext* context, const Request* request, Reply* reply) override {
+    auto user_name = request->username();
+    auto unfollow_list = request->arguments(); std::string unfollow_name = unfollow_list[0];
+
+    ProcessUnfollowRequest(user_name, unfollow_name, reply);
     return Status::OK;
   }
 
-  // RPC Login
-  Status Login(ServerContext* context, const Request* request, Reply* reply) override {
-
-    auto user_name = request->username();
+  // Local function
+  void ProcessLoginRequest(const std::string& user_name, Reply* reply) {
     std::cout << "Request received for user name " << user_name << " : ";
+    log(INFO, " Login request received for " + user_name);
 
-    if (clientMap.find(user_name) != clientMap.end()){
-      std::cout << "User "<<user_name <<" already exists." <<std::endl;
-      reply->set_msg("Username already exists.");
-    }
-    else{
+    if (clientMap.find(user_name) != clientMap.end()) {
+      int client_idx = clientMap[user_name];
+      /*
+      if (client_db[client_idx]->online) {
+        reply->set_msg("Username already exists.");
+      }       
+      */
+      //else {
+        std::cout << "Welcome back " << user_name << std::endl;
+        log(INFO, "Welcome back ");
+        reply->set_msg("Welcome back");
+        client_db[client_idx]->online = true;
+      //}
+    } else { // new user 
       clientMap[user_name] = client_count;
-      
-      reply->set_msg("Client added to data base");
+
+      reply->set_msg("Client added to database");
       Client* new_client = new Client;
       new_client->username = user_name;
-      new_client->user_file = sns_dir + user_name + ".txt";
-      new_client->user_following_file = sns_dir + user_name + "_following.txt";
-      //std::cout << "File names " <<  new_client.user_file << ", " << new_client.user_following_file << std::endl;
+      new_client->user_file = ServerdirName + user_name + ".txt";
+      new_client->user_following_file = ServerdirName + user_name + "_following.txt";
+      new_client->user_follower = ServerdirName + user_name + "_follower.txt";
+      new_client->online = true;
+      new_client->create_files();
 
-      //save the new client in the vector database
       client_db.push_back(new_client);
-      std::cout << "Client " << user_name << " added to database " <<std::endl;
-      
-      //increment the client counter
+      std::cout << "Client " << user_name << " added to database " << std::endl;
+      log(INFO, user_name + " added to database ");
+
       client_count++;
+
+      // add the user to the AllUsers.txt file
+      std::string update = user_name;
+      appendStringToFile(AllUsersFile, update);
     }
+  }
+
+  // gRPC function
+  Status Login(ServerContext* context, const Request* request, Reply* reply) {
+    auto user_name = request->username();
+
+    // Call the local function to process the login request
+    ProcessLoginRequest(user_name, reply);
+
+    //if we are the master, then we need to send the login request to all the workers
+    if (isMaster && workerConnected){
+      ClientContext context;
+      Request request;
+      Reply reply;
+      request.set_username(user_name);
+      request.set_type("Login");
+      Status status = worker_stub->Sync(&context, request, &reply);
+      if (status.ok()){
+        //std::cout << "Login request sent to all workers" <<std::endl;
+      }
+      else{
+        //std::cout << "Login request not sent to all workers" <<std::endl;
+      }
+    }
+
     return Status::OK;
   }
 
@@ -326,6 +472,8 @@ class SNSServiceImpl final : public SNSService::Service {
 
           //write the string to user.txt
           std::cout << "User " << user_name << " connected to the Timeline " <<std::endl;
+          log(INFO, user_name + " connected to timeline ");
+
           client_db[client_idx]->connected = true;
 
           // read the latest 20 posts from the persistent storage
@@ -380,13 +528,106 @@ class SNSServiceImpl final : public SNSService::Service {
     
     return Status::OK;
   }
+  
+  public:
+    void RecoverState(std::string clusterID, int serverID){
+      
+      // create directory name
+      std::stringstream directoryNameStream;
+      int clusterID_int = (serverID%3)+1;
+
+      directoryNameStream << "server_" << clusterID_int << "_" << serverID;
+      std::string directoryName = directoryNameStream.str();
+      ServerdirName = directoryName + '/';
+
+      // check if recovery file exists
+      if (directoryExists(directoryName)) 
+      {
+        //std::cout << "Server directory exists, recovering state from : " << directoryName << std::endl;
+
+        // recover data from recovery files
+        std::vector<std::string> clientNames = extractClientNames(directoryName);
+        // Print the extracted client names
+        std::cout << "Client Names:" << std::endl;
+        for (const std::string& clientName : clientNames) {
+            std::cout << clientName << std::endl;
+            
+            // create all client objects
+            Client* new_client = new Client;
+            new_client->username = clientName;
+            new_client->user_file = ServerdirName + clientName + ".txt";
+            new_client->user_following_file = ServerdirName + clientName + "_following.txt";
+            new_client->user_follower = ServerdirName + clientName + "_follower.txt";
+            new_client->online = false;
+
+            // add the client to the database
+            clientMap[clientName] = client_count;
+            client_db.push_back(new_client);
+            
+            //increment the client counter
+            client_count++;
+        }
+        // update follower relationships
+
+        std::cout << "Server state recovered." <<std::endl;
+        log(INFO, " Server state recovered");
+
+      }
+
+      else // if it does not exist create the directory and return
+      {
+        //std::cout << "Server directory does not exist." << std::endl;
+
+        if (mkdir(directoryName.c_str(), 0777) == 0) {
+          std::cout << "Directory created: " << directoryName << std::endl;
+        } else {
+          std::cerr << "Failed to create the directory." << std::endl;
+        }
+      }
+
+      // create all clients object and update datastructures
+    }
 
 };
 
-void RunServer(std::string port_no) {
-  std::string server_address = "0.0.0.0:"+port_no;
-  SNSServiceImpl service;
+void HeartBeat(std::string coordinator_address, int serverID, std::string hostname, std::string port, std::string type){
 
+  // update stub
+  auto channel = grpc::CreateChannel(coordinator_address,
+                          grpc::InsecureChannelCredentials());
+  coordinator_stub = csce438::CoordService::NewStub(channel);
+  //std::cout << " Coordinator address : " << coordinator_address << std::endl;
+
+  while(true){
+    ClientContext context;
+    ServerInfo s_info;
+    Confirmation confirm;
+    s_info.set_serverid(serverID);
+    s_info.set_hostname(hostname);
+    s_info.set_port(port);
+    s_info.set_type(type);
+  
+    Status status;
+    status = coordinator_stub->Heartbeat(&context, s_info, &confirm);
+    if (status.ok()){
+      //std::cout << "Sent KA to coordinator " <<std::endl;
+      // if confirm is true, then the server is the master
+      if (confirm.status()){
+        //std::cout << "Server is the master" <<std::endl;
+        
+      }
+    }
+    else{
+      std::cout << "KA not sent." <<std::endl;
+    }
+    // send heartbeat or KA messages to the coordinator
+    sleep(2);
+  }
+}
+
+void RunServer(std::string port_no, std::string clusterID, int serverID) {
+  std::string server_address = "0.0.0.0:"+port_no;
+  SNSServiceImpl service(clusterID ,serverID, server_address);
   ServerBuilder builder;
   builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
   builder.RegisterService(&service);
@@ -394,27 +635,56 @@ void RunServer(std::string port_no) {
   std::cout << "Server listening on " << server_address << std::endl;
   log(INFO, "Server listening on "+server_address);
 
+
+  log(INFO, "Server starting...");
   server->Wait();
 }
 
 int main(int argc, char** argv) {
 
   std::string port = "3010";
-  
+  std::string clusterID = "1";
+  int serverID = 1;
+  std::string coordinatorIP = "127.0.0.1:";
+  std::string coordinatorPort = "4000";
+
   int opt = 0;
-  while ((opt = getopt(argc, argv, "p:")) != -1){
-    switch(opt) {
-      case 'p':
-          port = optarg;break;
-      default:
-	  std::cerr << "Invalid Command Line Argument\n";
+  while ((opt = getopt(argc, argv, "c:s:h:k:p:")) != -1) {
+    switch (opt) {
+        case 'c':
+            clusterID = optarg;
+            break;
+        case 's':
+            serverID = std::atoi(optarg);
+            break;
+        case 'h':
+            coordinatorIP = optarg;
+            break;
+        case 'k':
+            coordinatorPort = optarg;
+            break;
+        case 'p':
+            port = optarg;
+            break;
+        case '?':
+            std::cerr << "Invalid Command Line Argument\n";
+            return 1;
     }
   }
   
   std::string log_file_name = std::string("server-") + port;
   google::InitGoogleLogging(log_file_name.c_str());
   log(INFO, "Logging Initialized. Server starting...");
-  RunServer(port);
+  
+  std::string coordinator_address(coordinatorIP+coordinatorPort);
+  std::string hostname = "0.0.0.0:";
+  std::string type = "Server";
+
+  //Start Keep Alive Thread and connect with coordinator
+  std::thread KeepAlive(HeartBeat, coordinator_address, serverID, hostname , port, type);
+  
+  // Start seving clients
+  RunServer(port, clusterID, serverID);
 
   return 0;
 }
