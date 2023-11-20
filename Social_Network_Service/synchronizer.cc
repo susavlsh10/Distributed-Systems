@@ -23,6 +23,8 @@
 #include "coordinator.grpc.pb.h"
 #include "synchronizer.grpc.pb.h"
 
+#include "utils.h"
+
 namespace fs = std::filesystem;
 
 using google::protobuf::Timestamp;
@@ -161,6 +163,14 @@ int main(int argc, char** argv) {
   return 0;
 }
 
+void print_users(std::vector<std::string> users){
+    std::cout<<"Users: ";
+    for(auto user:users){
+        std::cout<<user<<", ";
+    }
+    std::cout<<std::endl;
+}
+
 void run_synchronizer(std::string coordIP, std::string coordPort, std::string port, int synchID){
     //setup coordinator stub
     //std::cout<<"synchronizer stub"<<std::endl;
@@ -203,11 +213,80 @@ void run_synchronizer(std::string coordIP, std::string coordPort, std::string po
     std::string AllUser_file = ServerdirName + "AllUsers.txt";
     std::cout << "AllUser_file: " << AllUser_file << std::endl;
 
-    //TODO: begin synchronization process
-    /*
+    // request all synch servers from coordinator
+    std::vector<std::string> all_users;
+    std::vector<std::string> new_users;
+
+    // create stubs for all synch servers
+    std::vector<std::shared_ptr<SynchService::Stub>> synch_stubs;
+    std::vector <int> registered_synchronizers;
+    registered_synchronizers.push_back(clusterid);
+    
     while(true){
         //change this to 30 eventually
-        sleep(5);
+        sleep(10);
+
+        // read data from Alluser_file and update all_users if user not in all_users
+        std::vector<std::string> users = get_lines_from_file(AllUser_file);
+        new_users.clear();
+
+        // if user not in all_users, add user to all_users
+        for(auto user:users){
+            if(std::find(all_users.begin(), all_users.end(), user) == all_users.end()){
+                all_users.push_back(user);
+                new_users.push_back(user);
+            }
+        }
+
+        // pring users
+        print_users(users);
+
+        //std::cout << "Size of registered_synchronizers: " << registered_synchronizers.size() << std::endl;
+        // if num_synch_servers is less than 3, request all synch servers from coordinator
+        if(registered_synchronizers.size() < 3){
+            auto clusterId_list = getOtherIntegers(registered_synchronizers);
+            //std::cout << "Size of clusterId_list: " << clusterId_list.size() << std::endl;
+
+            // request all synch servers from coordinator
+            for (auto i : clusterId_list){
+                std::cout<<"Requesting synch server "<<i<<std::endl;
+                ID request;
+                request.set_id(i);
+                ServerInfo reply;
+                grpc::ClientContext context;
+
+                Status status = coord_stub_->GetSynchronizer(&context, request, &reply);
+                if(status.ok()){
+                    std::cout << "Received synchro"<< i << "server address: " << reply.hostname() << reply.port() << std::endl;
+                    if (reply.connected()){ // the other synchronizer server is online
+                    // create stubs for all synch servers
+                        std::string target_str = reply.hostname() + reply.port();
+                        std::shared_ptr<SynchService::Stub> synch_stub_;
+                        synch_stub_ = std::shared_ptr<SynchService::Stub>(SynchService::NewStub(grpc::CreateChannel(target_str, grpc::InsecureChannelCredentials())));
+                        //synch_stubs.push_back(std::move(synch_stub_));
+                        synch_stubs.push_back(synch_stub_);
+
+                        registered_synchronizers.push_back(i);
+                    }
+
+                }else{
+                    std::cout<<"Synchronizer "<<synchID<<" failed to connect to coordinator  "<<i<<std::endl;
+                    break;
+                }
+            }
+        }
+
+        // forward the new users to all synch servers
+        for(auto stub_: synch_stubs){
+            // call SyncUsers and pass all the new users
+
+        }
+
+
+        
+        //std::cout<<"all_users: "<< users <<std::endl;
+
+
         //synch all users file 
             //get list of all followers
 
@@ -228,7 +307,7 @@ void run_synchronizer(std::string coordIP, std::string coordPort, std::string po
 	    //force update managed users from newly synced users
             //for all users
             
-            for(auto i : aggregated_users){
+            //for(auto i : aggregated_users){
                 //get currently managed users
                 //if user IS managed by current synch
                     //read their follower lists
@@ -238,14 +317,12 @@ void run_synchronizer(std::string coordIP, std::string coordPort, std::string po
                     //add post to tl of managed user    
             
                      // YOUR CODE HERE
-                    }
+            //        }
                 //}
             
 
             
     } 
-    
-    */
 
     return;
 }

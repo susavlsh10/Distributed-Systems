@@ -173,9 +173,7 @@ class SNSServiceImpl final : public SNSService::Service {
         // recover state if available
       RecoverState(clusterID, serverID);
 
-      // create a file called AllUsers.txt
-      AllUsersFile = ServerdirName + "AllUsers.txt";
-      createEmptyFile(AllUsersFile);
+
 
     }
 
@@ -583,6 +581,9 @@ class SNSServiceImpl final : public SNSService::Service {
         } else {
           std::cerr << "Failed to create the directory." << std::endl;
         }
+        // create a file called AllUsers.txt
+        AllUsersFile = ServerdirName + "AllUsers.txt";
+        createEmptyFile(AllUsersFile);
       }
 
       // create all clients object and update datastructures

@@ -49,6 +49,7 @@ struct zNode{
     bool missed_heartbeat;
     bool isActive();
     bool master;
+    bool connected = false;
 
 };
 
@@ -187,6 +188,7 @@ class CoordServiceImpl final : public CoordService::Service {
     SNS_Cluster.synchro[clusterID-1].last_heartbeat = getTimeNow();
     SNS_Cluster.synchro[clusterID-1].missed_heartbeat = false;
     SNS_Cluster.synchro[clusterID-1].master = false;
+    SNS_Cluster.synchro[clusterID-1].connected = true;
 
     // access master froom the given cluster, and return the master info in replyinfo
     int master_idx = SNS_Cluster.master_idx[clusterID-1];
@@ -229,6 +231,19 @@ class CoordServiceImpl final : public CoordService::Service {
     //confirmation->set_status(true);
     return Status::OK;
   }
+
+  // implement GetSynchronizer
+  Status GetSynchronizer(ServerContext* context, const ID* id, ServerInfo* serverinfo) override {
+    std::cout<<"Got GetSynchronizer for Cluster ID: "<<id->id()<<std::endl; 
+    log(INFO, "Got GetSynchronizer for Cluster ID "+ id->id());
+    int clusterID = id->id();
+
+    serverinfo->set_hostname(SNS_Cluster.synchro[clusterID-1].hostname);
+    serverinfo->set_port(SNS_Cluster.synchro[clusterID-1].port);
+    serverinfo->set_connected(SNS_Cluster.synchro[clusterID-1].connected);
+    return Status::OK;
+  }
+
 
   Status Heartbeat(ServerContext* context, const ServerInfo* serverinfo, Confirmation* confirmation) override {
     //std::cout<<"Got Heartbeat! "<<serverinfo->type()<<"("<<serverinfo->serverid()<<")"<<std::endl;
@@ -383,18 +398,6 @@ class CoordServiceImpl final : public CoordService::Service {
     else {
       serverinfo->set_type("None"); 
     }
-    return Status::OK;
-  }
-
-  //implement GetSynchronizer
-  Status GetSynchronizer(ServerContext* context, const ID* id, ServerInfo* serverinfo) override {
-    std::cout<<"Got GetSynchronizer for Cluster ID: "<<id->id()<<std::endl; 
-    log(INFO, "Got GetSynchronizer for Cluster ID "+ id->id());
-    int clusterID = (id->id()%3)+1;
-
-    serverinfo->set_hostname(SNS_Cluster.synchro[clusterID-1].hostname);
-    serverinfo->set_port(SNS_Cluster.synchro[clusterID-1].port);
-
     return Status::OK;
   }
 

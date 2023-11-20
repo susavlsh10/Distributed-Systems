@@ -116,3 +116,15 @@ std::vector<std::string> extractClientNames(const std::string& directoryPath) {
 
     return clientNames;
 }
+
+std::vector<int> getOtherIntegers(const std::vector<int>& nums) {
+    std::vector<int> result;
+
+    // Create a set of numbers from {1, 2, 3}
+    std::set<int> numSet = {1, 2, 3};
+
+    // Find numbers that are not in the input vector
+    std::set_difference(numSet.begin(), numSet.end(), nums.begin(), nums.end(), std::back_inserter(result));
+
+    return result;
+}

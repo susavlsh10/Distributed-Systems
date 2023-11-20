@@ -27,6 +27,8 @@ static const char* SNSService_method_names[] = {
   "/csce438.SNSService/Follow",
   "/csce438.SNSService/UnFollow",
   "/csce438.SNSService/Timeline",
+  "/csce438.SNSService/RegisterWorker",
+  "/csce438.SNSService/Sync",
 };
 
 std::unique_ptr< SNSService::Stub> SNSService::NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options) {
@@ -41,6 +43,8 @@ SNSService::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel
   , rpcmethod_Follow_(SNSService_method_names[2], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   , rpcmethod_UnFollow_(SNSService_method_names[3], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   , rpcmethod_Timeline_(SNSService_method_names[4], options.suffix_for_stats(),::grpc::internal::RpcMethod::BIDI_STREAMING, channel)
+  , rpcmethod_RegisterWorker_(SNSService_method_names[5], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_Sync_(SNSService_method_names[6], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   {}
 
 ::grpc::Status SNSService::Stub::Login(::grpc::ClientContext* context, const ::csce438::Request& request, ::csce438::Reply* response) {
@@ -151,6 +155,52 @@ void SNSService::Stub::async::Timeline(::grpc::ClientContext* context, ::grpc::C
   return ::grpc::internal::ClientAsyncReaderWriterFactory< ::csce438::Message, ::csce438::Message>::Create(channel_.get(), cq, rpcmethod_Timeline_, context, false, nullptr);
 }
 
+::grpc::Status SNSService::Stub::RegisterWorker(::grpc::ClientContext* context, const ::csce438::WorkerInfo& request, ::csce438::Reply* response) {
+  return ::grpc::internal::BlockingUnaryCall< ::csce438::WorkerInfo, ::csce438::Reply, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_RegisterWorker_, context, request, response);
+}
+
+void SNSService::Stub::async::RegisterWorker(::grpc::ClientContext* context, const ::csce438::WorkerInfo* request, ::csce438::Reply* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::csce438::WorkerInfo, ::csce438::Reply, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_RegisterWorker_, context, request, response, std::move(f));
+}
+
+void SNSService::Stub::async::RegisterWorker(::grpc::ClientContext* context, const ::csce438::WorkerInfo* request, ::csce438::Reply* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_RegisterWorker_, context, request, response, reactor);
+}
+
+::grpc::ClientAsyncResponseReader< ::csce438::Reply>* SNSService::Stub::PrepareAsyncRegisterWorkerRaw(::grpc::ClientContext* context, const ::csce438::WorkerInfo& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::csce438::Reply, ::csce438::WorkerInfo, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_RegisterWorker_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::csce438::Reply>* SNSService::Stub::AsyncRegisterWorkerRaw(::grpc::ClientContext* context, const ::csce438::WorkerInfo& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncRegisterWorkerRaw(context, request, cq);
+  result->StartCall();
+  return result;
+}
+
+::grpc::Status SNSService::Stub::Sync(::grpc::ClientContext* context, const ::csce438::Request& request, ::csce438::Reply* response) {
+  return ::grpc::internal::BlockingUnaryCall< ::csce438::Request, ::csce438::Reply, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_Sync_, context, request, response);
+}
+
+void SNSService::Stub::async::Sync(::grpc::ClientContext* context, const ::csce438::Request* request, ::csce438::Reply* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::csce438::Request, ::csce438::Reply, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_Sync_, context, request, response, std::move(f));
+}
+
+void SNSService::Stub::async::Sync(::grpc::ClientContext* context, const ::csce438::Request* request, ::csce438::Reply* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_Sync_, context, request, response, reactor);
+}
+
+::grpc::ClientAsyncResponseReader< ::csce438::Reply>* SNSService::Stub::PrepareAsyncSyncRaw(::grpc::ClientContext* context, const ::csce438::Request& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::csce438::Reply, ::csce438::Request, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_Sync_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::csce438::Reply>* SNSService::Stub::AsyncSyncRaw(::grpc::ClientContext* context, const ::csce438::Request& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncSyncRaw(context, request, cq);
+  result->StartCall();
+  return result;
+}
+
 SNSService::Service::Service() {
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       SNSService_method_names[0],
@@ -202,6 +252,26 @@ SNSService::Service::Service() {
              ::csce438::Message>* stream) {
                return service->Timeline(ctx, stream);
              }, this)));
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      SNSService_method_names[5],
+      ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler< SNSService::Service, ::csce438::WorkerInfo, ::csce438::Reply, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](SNSService::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::csce438::WorkerInfo* req,
+             ::csce438::Reply* resp) {
+               return service->RegisterWorker(ctx, req, resp);
+             }, this)));
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      SNSService_method_names[6],
+      ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler< SNSService::Service, ::csce438::Request, ::csce438::Reply, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](SNSService::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::csce438::Request* req,
+             ::csce438::Reply* resp) {
+               return service->Sync(ctx, req, resp);
+             }, this)));
 }
 
 SNSService::Service::~Service() {
@@ -238,6 +308,20 @@ SNSService::Service::~Service() {
 ::grpc::Status SNSService::Service::Timeline(::grpc::ServerContext* context, ::grpc::ServerReaderWriter< ::csce438::Message, ::csce438::Message>* stream) {
   (void) context;
   (void) stream;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+::grpc::Status SNSService::Service::RegisterWorker(::grpc::ServerContext* context, const ::csce438::WorkerInfo* request, ::csce438::Reply* response) {
+  (void) context;
+  (void) request;
+  (void) response;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+::grpc::Status SNSService::Service::Sync(::grpc::ServerContext* context, const ::csce438::Request* request, ::csce438::Reply* response) {
+  (void) context;
+  (void) request;
+  (void) response;
   return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
 }
 

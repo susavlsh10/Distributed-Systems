@@ -29,6 +29,7 @@ message ServerInfo{
   string type = 4;
   bool master = 5;
   int32 clusterID = 6;
+  bool connected = 7;
 }
 
 //confirmation message definition
