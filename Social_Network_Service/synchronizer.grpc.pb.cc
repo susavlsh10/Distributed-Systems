@@ -25,6 +25,7 @@ static const char* SynchService_method_names[] = {
   "/csce438.SynchService/SyncUsers",
   "/csce438.SynchService/SyncFollowers",
   "/csce438.SynchService/SyncTimeline",
+  "/csce438.SynchService/UpdateMaster",
 };
 
 std::unique_ptr< SynchService::Stub> SynchService::NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options) {
@@ -37,6 +38,7 @@ SynchService::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& chann
   : channel_(channel), rpcmethod_SyncUsers_(SynchService_method_names[0], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   , rpcmethod_SyncFollowers_(SynchService_method_names[1], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   , rpcmethod_SyncTimeline_(SynchService_method_names[2], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_UpdateMaster_(SynchService_method_names[3], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   {}
 
 ::grpc::Status SynchService::Stub::SyncUsers(::grpc::ClientContext* context, const ::csce438::SyncRequest& request, ::csce438::SyncReply* response) {
@@ -108,6 +110,29 @@ void SynchService::Stub::async::SyncTimeline(::grpc::ClientContext* context, con
   return result;
 }
 
+::grpc::Status SynchService::Stub::UpdateMaster(::grpc::ClientContext* context, const ::csce438::MasterInfo& request, ::csce438::SyncReply* response) {
+  return ::grpc::internal::BlockingUnaryCall< ::csce438::MasterInfo, ::csce438::SyncReply, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_UpdateMaster_, context, request, response);
+}
+
+void SynchService::Stub::async::UpdateMaster(::grpc::ClientContext* context, const ::csce438::MasterInfo* request, ::csce438::SyncReply* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::csce438::MasterInfo, ::csce438::SyncReply, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_UpdateMaster_, context, request, response, std::move(f));
+}
+
+void SynchService::Stub::async::UpdateMaster(::grpc::ClientContext* context, const ::csce438::MasterInfo* request, ::csce438::SyncReply* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_UpdateMaster_, context, request, response, reactor);
+}
+
+::grpc::ClientAsyncResponseReader< ::csce438::SyncReply>* SynchService::Stub::PrepareAsyncUpdateMasterRaw(::grpc::ClientContext* context, const ::csce438::MasterInfo& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::csce438::SyncReply, ::csce438::MasterInfo, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_UpdateMaster_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::csce438::SyncReply>* SynchService::Stub::AsyncUpdateMasterRaw(::grpc::ClientContext* context, const ::csce438::MasterInfo& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncUpdateMasterRaw(context, request, cq);
+  result->StartCall();
+  return result;
+}
+
 SynchService::Service::Service() {
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       SynchService_method_names[0],
@@ -139,6 +164,16 @@ SynchService::Service::Service() {
              ::csce438::SyncReply* resp) {
                return service->SyncTimeline(ctx, req, resp);
              }, this)));
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      SynchService_method_names[3],
+      ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler< SynchService::Service, ::csce438::MasterInfo, ::csce438::SyncReply, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](SynchService::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::csce438::MasterInfo* req,
+             ::csce438::SyncReply* resp) {
+               return service->UpdateMaster(ctx, req, resp);
+             }, this)));
 }
 
 SynchService::Service::~Service() {
@@ -159,6 +194,13 @@ SynchService::Service::~Service() {
 }
 
 ::grpc::Status SynchService::Service::SyncTimeline(::grpc::ServerContext* context, const ::csce438::timelineRequest* request, ::csce438::SyncReply* response) {
+  (void) context;
+  (void) request;
+  (void) response;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+::grpc::Status SynchService::Service::UpdateMaster(::grpc::ServerContext* context, const ::csce438::MasterInfo* request, ::csce438::SyncReply* response) {
   (void) context;
   (void) request;
   (void) response;

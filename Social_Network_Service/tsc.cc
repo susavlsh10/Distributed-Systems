@@ -311,7 +311,7 @@ void Client::Timeline(const std::string& username) {
     while(true){
       //std::cout << "Enter text to Timeline: ";
       //std::getline(std::cin, input_text);
-      sleep(4);
+      sleep(5);
       input_text = "UpdateTimeline";
       msg = MakeMessage(username, input_text);
       stream->Write(msg);

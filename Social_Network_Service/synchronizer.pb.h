@@ -52,6 +52,9 @@ struct TableStruct_synchronizer_2eproto {
 extern const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable
     descriptor_table_synchronizer_2eproto;
 namespace csce438 {
+class MasterInfo;
+struct MasterInfoDefaultTypeInternal;
+extern MasterInfoDefaultTypeInternal _MasterInfo_default_instance_;
 class SyncReply;
 struct SyncReplyDefaultTypeInternal;
 extern SyncReplyDefaultTypeInternal _SyncReply_default_instance_;
@@ -63,6 +66,8 @@ struct timelineRequestDefaultTypeInternal;
 extern timelineRequestDefaultTypeInternal _timelineRequest_default_instance_;
 }  // namespace csce438
 PROTOBUF_NAMESPACE_OPEN
+template <>
+::csce438::MasterInfo* Arena::CreateMaybeMessage<::csce438::MasterInfo>(Arena*);
 template <>
 ::csce438::SyncReply* Arena::CreateMaybeMessage<::csce438::SyncReply>(Arena*);
 template <>
@@ -757,6 +762,173 @@ class timelineRequest final :
   };
   union { Impl_ _impl_; };
   friend struct ::TableStruct_synchronizer_2eproto;
+};// -------------------------------------------------------------------
+
+class MasterInfo final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:csce438.MasterInfo) */ {
+ public:
+  inline MasterInfo() : MasterInfo(nullptr) {}
+  ~MasterInfo() override;
+  template<typename = void>
+  explicit PROTOBUF_CONSTEXPR MasterInfo(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  MasterInfo(const MasterInfo& from);
+  MasterInfo(MasterInfo&& from) noexcept
+    : MasterInfo() {
+    *this = ::std::move(from);
+  }
+
+  inline MasterInfo& operator=(const MasterInfo& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline MasterInfo& operator=(MasterInfo&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  inline const ::PROTOBUF_NAMESPACE_ID::UnknownFieldSet& unknown_fields() const {
+    return _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance);
+  }
+  inline ::PROTOBUF_NAMESPACE_ID::UnknownFieldSet* mutable_unknown_fields() {
+    return _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const MasterInfo& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const MasterInfo* internal_default_instance() {
+    return reinterpret_cast<const MasterInfo*>(
+               &_MasterInfo_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    3;
+
+  friend void swap(MasterInfo& a, MasterInfo& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(MasterInfo* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(MasterInfo* other) {
+    if (other == this) return;
+    ABSL_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  MasterInfo* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<MasterInfo>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const MasterInfo& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const MasterInfo& from) {
+    MasterInfo::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  ::size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  ::uint8_t* _InternalSerialize(
+      ::uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(MasterInfo* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::absl::string_view FullMessageName() {
+    return "csce438.MasterInfo";
+  }
+  protected:
+  explicit MasterInfo(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kServerIDFieldNumber = 1,
+    kClusterIDFieldNumber = 2,
+  };
+  // int32 serverID = 1;
+  void clear_serverid() ;
+  ::int32_t serverid() const;
+  void set_serverid(::int32_t value);
+
+  private:
+  ::int32_t _internal_serverid() const;
+  void _internal_set_serverid(::int32_t value);
+
+  public:
+  // int32 clusterID = 2;
+  void clear_clusterid() ;
+  ::int32_t clusterid() const;
+  void set_clusterid(::int32_t value);
+
+  private:
+  ::int32_t _internal_clusterid() const;
+  void _internal_set_clusterid(::int32_t value);
+
+  public:
+  // @@protoc_insertion_point(class_scope:csce438.MasterInfo)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::int32_t serverid_;
+    ::int32_t clusterid_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_synchronizer_2eproto;
 };
 
 // ===================================================================
@@ -1382,6 +1554,50 @@ inline void timelineRequest::set_allocated_follower_name(std::string* value) {
         }
   #endif  // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   // @@protoc_insertion_point(field_set_allocated:csce438.timelineRequest.follower_name)
+}
+
+// -------------------------------------------------------------------
+
+// MasterInfo
+
+// int32 serverID = 1;
+inline void MasterInfo::clear_serverid() {
+  _impl_.serverid_ = 0;
+}
+inline ::int32_t MasterInfo::serverid() const {
+  // @@protoc_insertion_point(field_get:csce438.MasterInfo.serverID)
+  return _internal_serverid();
+}
+inline void MasterInfo::set_serverid(::int32_t value) {
+  _internal_set_serverid(value);
+  // @@protoc_insertion_point(field_set:csce438.MasterInfo.serverID)
+}
+inline ::int32_t MasterInfo::_internal_serverid() const {
+  return _impl_.serverid_;
+}
+inline void MasterInfo::_internal_set_serverid(::int32_t value) {
+  ;
+  _impl_.serverid_ = value;
+}
+
+// int32 clusterID = 2;
+inline void MasterInfo::clear_clusterid() {
+  _impl_.clusterid_ = 0;
+}
+inline ::int32_t MasterInfo::clusterid() const {
+  // @@protoc_insertion_point(field_get:csce438.MasterInfo.clusterID)
+  return _internal_clusterid();
+}
+inline void MasterInfo::set_clusterid(::int32_t value) {
+  _internal_set_clusterid(value);
+  // @@protoc_insertion_point(field_set:csce438.MasterInfo.clusterID)
+}
+inline ::int32_t MasterInfo::_internal_clusterid() const {
+  return _impl_.clusterid_;
+}
+inline void MasterInfo::_internal_set_clusterid(::int32_t value) {
+  ;
+  _impl_.clusterid_ = value;
 }
 
 #ifdef __GNUC__

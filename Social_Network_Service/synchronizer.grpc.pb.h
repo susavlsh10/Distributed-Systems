@@ -63,6 +63,13 @@ class SynchService final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::csce438::SyncReply>> PrepareAsyncSyncTimeline(::grpc::ClientContext* context, const ::csce438::timelineRequest& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::csce438::SyncReply>>(PrepareAsyncSyncTimelineRaw(context, request, cq));
     }
+    virtual ::grpc::Status UpdateMaster(::grpc::ClientContext* context, const ::csce438::MasterInfo& request, ::csce438::SyncReply* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::csce438::SyncReply>> AsyncUpdateMaster(::grpc::ClientContext* context, const ::csce438::MasterInfo& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::csce438::SyncReply>>(AsyncUpdateMasterRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::csce438::SyncReply>> PrepareAsyncUpdateMaster(::grpc::ClientContext* context, const ::csce438::MasterInfo& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::csce438::SyncReply>>(PrepareAsyncUpdateMasterRaw(context, request, cq));
+    }
     class async_interface {
      public:
       virtual ~async_interface() {}
@@ -75,6 +82,8 @@ class SynchService final {
       // update timeline
       virtual void SyncTimeline(::grpc::ClientContext* context, const ::csce438::timelineRequest* request, ::csce438::SyncReply* response, std::function<void(::grpc::Status)>) = 0;
       virtual void SyncTimeline(::grpc::ClientContext* context, const ::csce438::timelineRequest* request, ::csce438::SyncReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      virtual void UpdateMaster(::grpc::ClientContext* context, const ::csce438::MasterInfo* request, ::csce438::SyncReply* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void UpdateMaster(::grpc::ClientContext* context, const ::csce438::MasterInfo* request, ::csce438::SyncReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
     };
     typedef class async_interface experimental_async_interface;
     virtual class async_interface* async() { return nullptr; }
@@ -86,6 +95,8 @@ class SynchService final {
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::csce438::SyncReply>* PrepareAsyncSyncFollowersRaw(::grpc::ClientContext* context, const ::csce438::SyncRequest& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::csce438::SyncReply>* AsyncSyncTimelineRaw(::grpc::ClientContext* context, const ::csce438::timelineRequest& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::csce438::SyncReply>* PrepareAsyncSyncTimelineRaw(::grpc::ClientContext* context, const ::csce438::timelineRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::csce438::SyncReply>* AsyncUpdateMasterRaw(::grpc::ClientContext* context, const ::csce438::MasterInfo& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::csce438::SyncReply>* PrepareAsyncUpdateMasterRaw(::grpc::ClientContext* context, const ::csce438::MasterInfo& request, ::grpc::CompletionQueue* cq) = 0;
   };
   class Stub final : public StubInterface {
    public:
@@ -111,6 +122,13 @@ class SynchService final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::csce438::SyncReply>> PrepareAsyncSyncTimeline(::grpc::ClientContext* context, const ::csce438::timelineRequest& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::csce438::SyncReply>>(PrepareAsyncSyncTimelineRaw(context, request, cq));
     }
+    ::grpc::Status UpdateMaster(::grpc::ClientContext* context, const ::csce438::MasterInfo& request, ::csce438::SyncReply* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::csce438::SyncReply>> AsyncUpdateMaster(::grpc::ClientContext* context, const ::csce438::MasterInfo& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::csce438::SyncReply>>(AsyncUpdateMasterRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::csce438::SyncReply>> PrepareAsyncUpdateMaster(::grpc::ClientContext* context, const ::csce438::MasterInfo& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::csce438::SyncReply>>(PrepareAsyncUpdateMasterRaw(context, request, cq));
+    }
     class async final :
       public StubInterface::async_interface {
      public:
@@ -120,6 +138,8 @@ class SynchService final {
       void SyncFollowers(::grpc::ClientContext* context, const ::csce438::SyncRequest* request, ::csce438::SyncReply* response, ::grpc::ClientUnaryReactor* reactor) override;
       void SyncTimeline(::grpc::ClientContext* context, const ::csce438::timelineRequest* request, ::csce438::SyncReply* response, std::function<void(::grpc::Status)>) override;
       void SyncTimeline(::grpc::ClientContext* context, const ::csce438::timelineRequest* request, ::csce438::SyncReply* response, ::grpc::ClientUnaryReactor* reactor) override;
+      void UpdateMaster(::grpc::ClientContext* context, const ::csce438::MasterInfo* request, ::csce438::SyncReply* response, std::function<void(::grpc::Status)>) override;
+      void UpdateMaster(::grpc::ClientContext* context, const ::csce438::MasterInfo* request, ::csce438::SyncReply* response, ::grpc::ClientUnaryReactor* reactor) override;
      private:
       friend class Stub;
       explicit async(Stub* stub): stub_(stub) { }
@@ -137,9 +157,12 @@ class SynchService final {
     ::grpc::ClientAsyncResponseReader< ::csce438::SyncReply>* PrepareAsyncSyncFollowersRaw(::grpc::ClientContext* context, const ::csce438::SyncRequest& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::csce438::SyncReply>* AsyncSyncTimelineRaw(::grpc::ClientContext* context, const ::csce438::timelineRequest& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::csce438::SyncReply>* PrepareAsyncSyncTimelineRaw(::grpc::ClientContext* context, const ::csce438::timelineRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::csce438::SyncReply>* AsyncUpdateMasterRaw(::grpc::ClientContext* context, const ::csce438::MasterInfo& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::csce438::SyncReply>* PrepareAsyncUpdateMasterRaw(::grpc::ClientContext* context, const ::csce438::MasterInfo& request, ::grpc::CompletionQueue* cq) override;
     const ::grpc::internal::RpcMethod rpcmethod_SyncUsers_;
     const ::grpc::internal::RpcMethod rpcmethod_SyncFollowers_;
     const ::grpc::internal::RpcMethod rpcmethod_SyncTimeline_;
+    const ::grpc::internal::RpcMethod rpcmethod_UpdateMaster_;
   };
   static std::unique_ptr<Stub> NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
 
@@ -153,6 +176,7 @@ class SynchService final {
     virtual ::grpc::Status SyncFollowers(::grpc::ServerContext* context, const ::csce438::SyncRequest* request, ::csce438::SyncReply* response);
     // update timeline
     virtual ::grpc::Status SyncTimeline(::grpc::ServerContext* context, const ::csce438::timelineRequest* request, ::csce438::SyncReply* response);
+    virtual ::grpc::Status UpdateMaster(::grpc::ServerContext* context, const ::csce438::MasterInfo* request, ::csce438::SyncReply* response);
   };
   template <class BaseClass>
   class WithAsyncMethod_SyncUsers : public BaseClass {
@@ -214,7 +238,27 @@ class SynchService final {
       ::grpc::Service::RequestAsyncUnary(2, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
-  typedef WithAsyncMethod_SyncUsers<WithAsyncMethod_SyncFollowers<WithAsyncMethod_SyncTimeline<Service > > > AsyncService;
+  template <class BaseClass>
+  class WithAsyncMethod_UpdateMaster : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithAsyncMethod_UpdateMaster() {
+      ::grpc::Service::MarkMethodAsync(3);
+    }
+    ~WithAsyncMethod_UpdateMaster() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status UpdateMaster(::grpc::ServerContext* /*context*/, const ::csce438::MasterInfo* /*request*/, ::csce438::SyncReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestUpdateMaster(::grpc::ServerContext* context, ::csce438::MasterInfo* request, ::grpc::ServerAsyncResponseWriter< ::csce438::SyncReply>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(3, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  typedef WithAsyncMethod_SyncUsers<WithAsyncMethod_SyncFollowers<WithAsyncMethod_SyncTimeline<WithAsyncMethod_UpdateMaster<Service > > > > AsyncService;
   template <class BaseClass>
   class WithCallbackMethod_SyncUsers : public BaseClass {
    private:
@@ -296,7 +340,34 @@ class SynchService final {
     virtual ::grpc::ServerUnaryReactor* SyncTimeline(
       ::grpc::CallbackServerContext* /*context*/, const ::csce438::timelineRequest* /*request*/, ::csce438::SyncReply* /*response*/)  { return nullptr; }
   };
-  typedef WithCallbackMethod_SyncUsers<WithCallbackMethod_SyncFollowers<WithCallbackMethod_SyncTimeline<Service > > > CallbackService;
+  template <class BaseClass>
+  class WithCallbackMethod_UpdateMaster : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithCallbackMethod_UpdateMaster() {
+      ::grpc::Service::MarkMethodCallback(3,
+          new ::grpc::internal::CallbackUnaryHandler< ::csce438::MasterInfo, ::csce438::SyncReply>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::csce438::MasterInfo* request, ::csce438::SyncReply* response) { return this->UpdateMaster(context, request, response); }));}
+    void SetMessageAllocatorFor_UpdateMaster(
+        ::grpc::MessageAllocator< ::csce438::MasterInfo, ::csce438::SyncReply>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(3);
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::csce438::MasterInfo, ::csce438::SyncReply>*>(handler)
+              ->SetMessageAllocator(allocator);
+    }
+    ~WithCallbackMethod_UpdateMaster() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status UpdateMaster(::grpc::ServerContext* /*context*/, const ::csce438::MasterInfo* /*request*/, ::csce438::SyncReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* UpdateMaster(
+      ::grpc::CallbackServerContext* /*context*/, const ::csce438::MasterInfo* /*request*/, ::csce438::SyncReply* /*response*/)  { return nullptr; }
+  };
+  typedef WithCallbackMethod_SyncUsers<WithCallbackMethod_SyncFollowers<WithCallbackMethod_SyncTimeline<WithCallbackMethod_UpdateMaster<Service > > > > CallbackService;
   typedef CallbackService ExperimentalCallbackService;
   template <class BaseClass>
   class WithGenericMethod_SyncUsers : public BaseClass {
@@ -345,6 +416,23 @@ class SynchService final {
     }
     // disable synchronous version of this method
     ::grpc::Status SyncTimeline(::grpc::ServerContext* /*context*/, const ::csce438::timelineRequest* /*request*/, ::csce438::SyncReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
+  template <class BaseClass>
+  class WithGenericMethod_UpdateMaster : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithGenericMethod_UpdateMaster() {
+      ::grpc::Service::MarkMethodGeneric(3);
+    }
+    ~WithGenericMethod_UpdateMaster() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status UpdateMaster(::grpc::ServerContext* /*context*/, const ::csce438::MasterInfo* /*request*/, ::csce438::SyncReply* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -407,6 +495,26 @@ class SynchService final {
     }
     void RequestSyncTimeline(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
       ::grpc::Service::RequestAsyncUnary(2, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithRawMethod_UpdateMaster : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawMethod_UpdateMaster() {
+      ::grpc::Service::MarkMethodRaw(3);
+    }
+    ~WithRawMethod_UpdateMaster() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status UpdateMaster(::grpc::ServerContext* /*context*/, const ::csce438::MasterInfo* /*request*/, ::csce438::SyncReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestUpdateMaster(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(3, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -473,6 +581,28 @@ class SynchService final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     virtual ::grpc::ServerUnaryReactor* SyncTimeline(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
+  };
+  template <class BaseClass>
+  class WithRawCallbackMethod_UpdateMaster : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawCallbackMethod_UpdateMaster() {
+      ::grpc::Service::MarkMethodRawCallback(3,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->UpdateMaster(context, request, response); }));
+    }
+    ~WithRawCallbackMethod_UpdateMaster() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status UpdateMaster(::grpc::ServerContext* /*context*/, const ::csce438::MasterInfo* /*request*/, ::csce438::SyncReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* UpdateMaster(
       ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
@@ -556,9 +686,36 @@ class SynchService final {
     // replace default version of method with streamed unary
     virtual ::grpc::Status StreamedSyncTimeline(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::csce438::timelineRequest,::csce438::SyncReply>* server_unary_streamer) = 0;
   };
-  typedef WithStreamedUnaryMethod_SyncUsers<WithStreamedUnaryMethod_SyncFollowers<WithStreamedUnaryMethod_SyncTimeline<Service > > > StreamedUnaryService;
+  template <class BaseClass>
+  class WithStreamedUnaryMethod_UpdateMaster : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithStreamedUnaryMethod_UpdateMaster() {
+      ::grpc::Service::MarkMethodStreamed(3,
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::csce438::MasterInfo, ::csce438::SyncReply>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::csce438::MasterInfo, ::csce438::SyncReply>* streamer) {
+                       return this->StreamedUpdateMaster(context,
+                         streamer);
+                  }));
+    }
+    ~WithStreamedUnaryMethod_UpdateMaster() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable regular version of this method
+    ::grpc::Status UpdateMaster(::grpc::ServerContext* /*context*/, const ::csce438::MasterInfo* /*request*/, ::csce438::SyncReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    // replace default version of method with streamed unary
+    virtual ::grpc::Status StreamedUpdateMaster(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::csce438::MasterInfo,::csce438::SyncReply>* server_unary_streamer) = 0;
+  };
+  typedef WithStreamedUnaryMethod_SyncUsers<WithStreamedUnaryMethod_SyncFollowers<WithStreamedUnaryMethod_SyncTimeline<WithStreamedUnaryMethod_UpdateMaster<Service > > > > StreamedUnaryService;
   typedef Service SplitStreamedService;
-  typedef WithStreamedUnaryMethod_SyncUsers<WithStreamedUnaryMethod_SyncFollowers<WithStreamedUnaryMethod_SyncTimeline<Service > > > StreamedService;
+  typedef WithStreamedUnaryMethod_SyncUsers<WithStreamedUnaryMethod_SyncFollowers<WithStreamedUnaryMethod_SyncTimeline<WithStreamedUnaryMethod_UpdateMaster<Service > > > > StreamedService;
 };
 
 }  // namespace csce438

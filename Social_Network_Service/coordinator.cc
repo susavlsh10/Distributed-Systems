@@ -21,6 +21,7 @@
 #define log(severity, msg) LOG(severity) << msg; google::FlushLogFiles(google::severity); 
 
 #include "coordinator.grpc.pb.h"
+#include "synchronizer.grpc.pb.h"
 
 using google::protobuf::Timestamp;
 using google::protobuf::Duration;
@@ -35,21 +36,24 @@ using csce438::CoordService;
 using csce438::ServerInfo;
 using csce438::Confirmation;
 using csce438::ID;
-//using csce438::ServerList;
-//using csce438::SynchService;
+using csce438::MasterInfo;
+using csce438::SyncReply;
+using csce438::SynchService;
+
 
 struct zNode{
-    int serverID;
-    int serverIndex;
-    int clusterID;
-    std::string hostname;
-    std::string port;
-    std::string type;
-    std::time_t last_heartbeat;
-    bool missed_heartbeat;
-    bool isActive();
-    bool master;
-    bool connected = false;
+  int serverID;
+  int serverIndex;
+  int clusterID;
+  std::string hostname;
+  std::string port;
+  std::string type;
+  std::time_t last_heartbeat;
+  bool missed_heartbeat;
+  bool isActive();
+  bool master;
+  bool connected = false;
+  std::shared_ptr<SynchService::Stub> synchro_stub_;
 
 };
 
@@ -189,6 +193,9 @@ class CoordServiceImpl final : public CoordService::Service {
     SNS_Cluster.synchro[clusterID-1].missed_heartbeat = false;
     SNS_Cluster.synchro[clusterID-1].master = false;
     SNS_Cluster.synchro[clusterID-1].connected = true;
+
+    //create synchronizer stub
+    SNS_Cluster.synchro[clusterID-1].synchro_stub_ = std::shared_ptr<SynchService::Stub>(SynchService::NewStub(grpc::CreateChannel(SynchroIP, grpc::InsecureChannelCredentials())));
 
     // access master froom the given cluster, and return the master info in replyinfo
     int master_idx = SNS_Cluster.master_idx[clusterID-1];
@@ -484,13 +491,24 @@ void checkClusterHB(std::vector<zNode*> cluster, int clusterID){
       std::cout << "No alive nodes in cluster " << clusterID << std::endl;
     }
     else{
-      std::cout << "Master at " << cluster[0]->hostname << cluster[0]->port << " for cluster " << clusterID << " disconnected" << std::endl;
+      std::cout << "Master at " << cluster[0]->hostname << cluster[0]->port << " for cluster " << clusterID +1<< " disconnected" << std::endl;
       // if there are alive nodes, assign new master
       int new_master_idx = alive_node[0]->serverIndex;
       SNS_Cluster.master_idx[clusterID] = new_master_idx;
       alive_node[0]->master = true;
-      std::cout << "New master at " << alive_node[0]->hostname << alive_node[0]->port << " for cluster " << clusterID << std::endl;
+      std::cout << "New master at " << alive_node[0]->hostname << alive_node[0]->port << " for cluster " << clusterID+1 << std::endl;
       log(INFO, " New master at "+ alive_node[0]->hostname);
+
+      // send new master info to synchronizer
+      SyncReply reply;
+      grpc::ClientContext context;
+      grpc::Status status;
+      MasterInfo master_info;
+      
+      master_info.set_serverid(alive_node[0]->serverID);
+      master_info.set_clusterid(clusterID+1);
+
+      status = SNS_Cluster.synchro[clusterID].synchro_stub_->UpdateMaster(&context, master_info, &reply);
     }
   }
 

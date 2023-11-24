@@ -47,6 +47,7 @@ using csce438::SynchService;
 using csce438::SyncRequest;
 using csce438::SyncReply;
 using csce438::timelineRequest;
+using csce438::MasterInfo;
 
 /*
 using csce438::ServerList;
@@ -63,6 +64,7 @@ std::vector<std::string> get_all_users_func(int);
 std::vector<std::string> get_tl_or_fl(int, int, bool);
 
 std::string AllUser_file;
+std::string LocalUser_file;
 std::string ServerdirName; 
 
 class SynchServiceImpl final : public SynchService::Service {
@@ -139,6 +141,27 @@ class SynchServiceImpl final : public SynchService::Service {
         }
         return Status::OK; 
     }
+
+    // Implement UpdateMaster
+    Status UpdateMaster(ServerContext* context, const MasterInfo* request, SyncReply* reply) override{
+        //std::cout<<"Got UpdateMaster"<<std::endl;
+        
+        auto serverID = request->serverid();
+        auto clusterID = request->clusterid();
+
+        // upadate serverdirName and AllUser_file
+        std::stringstream directoryNameStream;
+        directoryNameStream << "server_" << clusterID << "_" << serverID;
+        std::string directoryName = directoryNameStream.str();
+        ServerdirName = directoryName + '/';
+        AllUser_file = ServerdirName + "AllUsers.txt";
+
+        std::cout << "UpdateMaster: ServerdirName = " << ServerdirName << std::endl;
+        std::cout << "UpdateMaster: AllUser_file = " << AllUser_file << std::endl;
+
+        return Status::OK; 
+    }
+
 
 };
 
@@ -333,7 +356,8 @@ void run_synchronizer(std::string coordIP, std::string coordPort, std::string po
     ServerdirName = directoryName + '/';
 
     AllUser_file = ServerdirName + "AllUsers.txt";
-    std::string LocalUser_file = ServerdirName + "LocalUsers.txt";
+    LocalUser_file = ServerdirName + "LocalUsers.txt";
+    
     //std::cout << "AllUser_file: " << AllUser_file << std::endl;
 
     // create stubs for all synch servers
@@ -346,14 +370,14 @@ void run_synchronizer(std::string coordIP, std::string coordPort, std::string po
     registered_synchronizers.push_back(clusterid);
 
     // get current timestamp
-    time_t lastsync_timestamp= time(NULL);
+    time_t lastsync_timestamp= time_t(0);//time(NULL);
     std::string lastsync_timestamp_str = std::to_string(lastsync_timestamp);
     std::cout << "lastsync_timestamp_str: " << lastsync_timestamp_str << std::endl;
 
     
     while(true){
         //change this to 30 eventually
-        sleep(4);
+        sleep(10);
 
         // read data from Alluser_file and update all_users if user not in all_users
         std::vector<std::string> users = get_lines_from_file(AllUser_file);
@@ -453,6 +477,7 @@ void run_synchronizer(std::string coordIP, std::string coordPort, std::string po
             for (auto post : timeline){
                 if (std::stoi(post.time) > lastsync_timestamp){
                     new_posts.push_back(post);
+                    lastsync_timestamp = std::stoi(post.time);
                 }
             }
 
@@ -481,7 +506,7 @@ void run_synchronizer(std::string coordIP, std::string coordPort, std::string po
             }
         }
         // update lastsync_timestamp
-        lastsync_timestamp = time(NULL);
+        //lastsync_timestamp = time(NULL);
 
     } 
 

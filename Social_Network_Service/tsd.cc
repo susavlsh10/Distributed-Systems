@@ -518,10 +518,37 @@ class SNSServiceImpl final : public SNSService::Service {
     }
   }
 
+  void updateTimelineInt(ServerReaderWriter<Message, Message>* stream, std::string user_name, time_t& current_timestamp){
+    std::string user_file = ServerdirName + user_name + ".txt";
+    std::vector<Post> posts = readPostsFromFile(user_file);
+    //std::cout << "Updating timeline for user : " << user_name << std::endl;
+
+    // if post in posts not in timestamps, then write to stream
+    for (Post post: posts){
+      // check if post.time is in timestamps
+      // if post.time > timestamp, then write to stream
+      if (std::stoll(post.time) > current_timestamp) {
+        //std::cout << "Post time already in timestamps" <<std::endl;
+        Message new_msg;
+        new_msg.set_username(post.user);
+        new_msg.set_msg(post.post);
+        //std::cout << "Message : " << post.post << std::endl;
+
+        google::protobuf::Timestamp* timestamp = new google::protobuf::Timestamp();
+        timestamp->set_seconds(std::stoll(post.time));
+        timestamp->set_nanos(0);
+        new_msg.set_allocated_timestamp(timestamp);
+
+        stream->Write(new_msg);
+        current_timestamp = std::stoll(post.time);
+      }
+    }
+  }
+
   Status Timeline(ServerContext* context, 
 		ServerReaderWriter<Message, Message>* stream) override {
     Message m;
-    auto local_timestamp = time(NULL);  
+    auto local_timestamp = time_t(0); 
     std::vector<std::string> timestamps_recorded;
  
       // start a thread which periodically wakes up and reads from the file client.txt and writes to the stream
@@ -531,7 +558,8 @@ class SNSServiceImpl final : public SNSService::Service {
         int client_idx = clientMap[user_name];
 
         if (m.msg() == "UpdateTimeline"){
-          updateTimeline(stream, user_name, timestamps_recorded);
+          //updateTimeline(stream, user_name, timestamps_recorded);
+          updateTimelineInt(stream, user_name, local_timestamp);
         }
         else{
         if (client_db[client_idx]->connected == false){ // user enters timeline mode for the first time
@@ -570,12 +598,14 @@ class SNSServiceImpl final : public SNSService::Service {
 
               timestamps_recorded.push_back(post.time);
 
+              // if timestamp is greater than local_timestamp, then update local_timestamp
+              if (std::stoll(post.time) > local_timestamp){
+                local_timestamp = std::stoll(post.time);
+              }
+
               stream->Write(new_msg);
               }
             }
-            //std::thread tThread(&SNSServiceImpl::timelineThread, this, stream, user_name, local_timestamp);
-            //tThread.detach();
-            
         }
         else{ // if the user is making a new post 
           auto t_seconds = m.timestamp().seconds();
@@ -583,7 +613,8 @@ class SNSServiceImpl final : public SNSService::Service {
           appendPostToFile(std::to_string(t_seconds), user_name, m.msg(), client_db[client_idx]->user_timeline_file); // add post to user_timeline.txt
           
           //send the same message back to the user timeline
-          //stream->Write(m);
+          stream->Write(m);
+          local_timestamp = t_seconds;
 
           // write to all the clients who follow the current user
           for (const Client* _client:  client_db[client_idx]->client_followers){
