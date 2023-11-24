@@ -253,6 +253,7 @@ IReply Client::Login() {
 
     request.set_username(username);
     log(INFO, " Client requesting to login");
+    std::cout << "Client requesting to login with name : "<< username << std::endl;
     Status status = stub_->Login(&context, request, &reply);
 
     ire.grpc_status = status;
@@ -285,6 +286,7 @@ void Client::Timeline(const std::string& username) {
   log(INFO, " Client attempting to enter timeline");
   std::string input_text;
   Message msg;
+  std::cout << "User : " << username << " entered timeline mode." <<std::endl;
   msg = MakeMessage(username, "Start");
   if (stream->Write(msg))
   {
@@ -303,6 +305,20 @@ void Client::Timeline(const std::string& username) {
     stream->WritesDone();
   });
 
+    std::thread timeline_updater([stream, username] (){
+    std::string input_text;
+    Message msg;
+    while(true){
+      //std::cout << "Enter text to Timeline: ";
+      //std::getline(std::cin, input_text);
+      sleep(4);
+      input_text = "UpdateTimeline";
+      msg = MakeMessage(username, input_text);
+      stream->Write(msg);
+    }
+    stream->WritesDone();
+  });
+
     std::thread reader([stream, username] (){
     std::string read_text;
     Message read_msg;
@@ -315,6 +331,7 @@ void Client::Timeline(const std::string& username) {
 
     writer.join();
     reader.join();
+    timeline_updater.join();
   }
 }
 
@@ -323,7 +340,6 @@ void Client::ReconnectServer(std::string coordinator_address, int userid){
 
   //std::cout << "Reconnecting to server at : " << info.hostname() << info.port() << std::endl;
   log(INFO, " Reconnecting to server at " + info.hostname() + info.port());
-
 
 }
 
@@ -386,7 +402,7 @@ int main(int argc, char** argv) {
     }
   }
       
-  std::cout << "Logging Initialized. Client starting..." <<std::endl;
+  std::cout << "Logging Initialized. Client starting with username "<< username <<std::endl;
   
   // connect to coordinator and get server address
 

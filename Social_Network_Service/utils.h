@@ -18,6 +18,7 @@
 #include <unistd.h>
 #include <unordered_map>
 #include <dirent.h> // directory operations
+#include <set>
 
 
 struct Post {
@@ -37,5 +38,9 @@ void appendStringToFile(const std::string& filename, const std::string& stringTo
 bool directoryExists(const std::string& directoryName);
 
 std::vector<std::string> extractClientNames(const std::string& directoryPath);
+
+std::vector<int> getOtherIntegers(const std::vector<int>& nums);
+
+std::vector<std::string> get_lines_from_file(std::string filename);
 
 #endif // UTILS_H

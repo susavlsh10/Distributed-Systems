@@ -31,6 +31,14 @@ PROTOBUF_CONSTEXPR SyncRequest::SyncRequest(
     &::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized {}
   }
 
+  , /*decltype(_impl_.username_)*/ {
+    &::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized {}
+  }
+
+  , /*decltype(_impl_.followname_)*/ {
+    &::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized {}
+  }
+
   , /*decltype(_impl_.clusterid_)*/ 0
 
   , /*decltype(_impl_._cached_size_)*/{}} {}
@@ -60,8 +68,32 @@ struct SyncReplyDefaultTypeInternal {
 
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
     PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 SyncReplyDefaultTypeInternal _SyncReply_default_instance_;
+template <typename>
+PROTOBUF_CONSTEXPR timelineRequest::timelineRequest(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.message_)*/{}
+  , /*decltype(_impl_.timestamp_)*/{}
+  , /*decltype(_impl_.username_)*/ {
+    &::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized {}
+  }
+
+  , /*decltype(_impl_.follower_name_)*/ {
+    &::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized {}
+  }
+
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct timelineRequestDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR timelineRequestDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
+  ~timelineRequestDefaultTypeInternal() {}
+  union {
+    timelineRequest _instance;
+  };
+};
+
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
+    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 timelineRequestDefaultTypeInternal _timelineRequest_default_instance_;
 }  // namespace csce438
-static ::_pb::Metadata file_level_metadata_synchronizer_2eproto[2];
+static ::_pb::Metadata file_level_metadata_synchronizer_2eproto[3];
 static constexpr const ::_pb::EnumDescriptor**
     file_level_enum_descriptors_synchronizer_2eproto = nullptr;
 static constexpr const ::_pb::ServiceDescriptor**
@@ -80,6 +112,8 @@ const ::uint32_t TableStruct_synchronizer_2eproto::offsets[] PROTOBUF_SECTION_VA
     PROTOBUF_FIELD_OFFSET(::csce438::SyncRequest, _impl_.users_),
     PROTOBUF_FIELD_OFFSET(::csce438::SyncRequest, _impl_.type_),
     PROTOBUF_FIELD_OFFSET(::csce438::SyncRequest, _impl_.clusterid_),
+    PROTOBUF_FIELD_OFFSET(::csce438::SyncRequest, _impl_.username_),
+    PROTOBUF_FIELD_OFFSET(::csce438::SyncRequest, _impl_.followname_),
     ~0u,  // no _has_bits_
     PROTOBUF_FIELD_OFFSET(::csce438::SyncReply, _internal_metadata_),
     ~0u,  // no _extensions_
@@ -89,29 +123,46 @@ const ::uint32_t TableStruct_synchronizer_2eproto::offsets[] PROTOBUF_SECTION_VA
     ~0u,  // no _split_
     ~0u,  // no sizeof(Split)
     PROTOBUF_FIELD_OFFSET(::csce438::SyncReply, _impl_.success_),
+    ~0u,  // no _has_bits_
+    PROTOBUF_FIELD_OFFSET(::csce438::timelineRequest, _internal_metadata_),
+    ~0u,  // no _extensions_
+    ~0u,  // no _oneof_case_
+    ~0u,  // no _weak_field_map_
+    ~0u,  // no _inlined_string_donated_
+    ~0u,  // no _split_
+    ~0u,  // no sizeof(Split)
+    PROTOBUF_FIELD_OFFSET(::csce438::timelineRequest, _impl_.username_),
+    PROTOBUF_FIELD_OFFSET(::csce438::timelineRequest, _impl_.message_),
+    PROTOBUF_FIELD_OFFSET(::csce438::timelineRequest, _impl_.timestamp_),
+    PROTOBUF_FIELD_OFFSET(::csce438::timelineRequest, _impl_.follower_name_),
 };
 
 static const ::_pbi::MigrationSchema
     schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
         { 0, -1, -1, sizeof(::csce438::SyncRequest)},
-        { 12, -1, -1, sizeof(::csce438::SyncReply)},
+        { 14, -1, -1, sizeof(::csce438::SyncReply)},
+        { 23, -1, -1, sizeof(::csce438::timelineRequest)},
 };
 
 static const ::_pb::Message* const file_default_instances[] = {
     &::csce438::_SyncRequest_default_instance_._instance,
     &::csce438::_SyncReply_default_instance_._instance,
+    &::csce438::_timelineRequest_default_instance_._instance,
 };
 const char descriptor_table_protodef_synchronizer_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
     "\n\022synchronizer.proto\022\007csce438\032\037google/pr"
-    "otobuf/timestamp.proto\"N\n\013SyncRequest\022\017\n"
+    "otobuf/timestamp.proto\"t\n\013SyncRequest\022\017\n"
     "\007message\030\001 \001(\t\022\r\n\005users\030\002 \003(\t\022\014\n\004type\030\003 "
-    "\001(\t\022\021\n\tClusterID\030\004 \001(\005\"\034\n\tSyncReply\022\017\n\007s"
-    "uccess\030\001 \001(\0102\306\001\n\014SynchService\0229\n\tSyncUse"
-    "rs\022\024.csce438.SyncRequest\032\022.csce438.SyncR"
-    "eply\"\0000\001\022=\n\rSyncFollowers\022\024.csce438.Sync"
-    "Request\032\022.csce438.SyncReply\"\0000\001\022<\n\014SyncT"
-    "imeline\022\024.csce438.SyncRequest\032\022.csce438."
-    "SyncReply\"\0000\001b\006proto3"
+    "\001(\t\022\021\n\tClusterID\030\004 \001(\005\022\020\n\010username\030\005 \001(\t"
+    "\022\022\n\nfollowname\030\006 \001(\t\"\034\n\tSyncReply\022\017\n\007suc"
+    "cess\030\001 \001(\010\"^\n\017timelineRequest\022\020\n\010usernam"
+    "e\030\001 \001(\t\022\017\n\007message\030\002 \003(\t\022\021\n\ttimestamp\030\003 "
+    "\003(\t\022\025\n\rfollower_name\030\004 \001(\t2\304\001\n\014SynchServ"
+    "ice\0227\n\tSyncUsers\022\024.csce438.SyncRequest\032\022"
+    ".csce438.SyncReply\"\000\022;\n\rSyncFollowers\022\024."
+    "csce438.SyncRequest\032\022.csce438.SyncReply\""
+    "\000\022>\n\014SyncTimeline\022\030.csce438.timelineRequ"
+    "est\032\022.csce438.SyncReply\"\000b\006proto3"
 };
 static const ::_pbi::DescriptorTable* const descriptor_table_synchronizer_2eproto_deps[1] =
     {
@@ -121,13 +172,13 @@ static ::absl::once_flag descriptor_table_synchronizer_2eproto_once;
 const ::_pbi::DescriptorTable descriptor_table_synchronizer_2eproto = {
     false,
     false,
-    381,
+    513,
     descriptor_table_protodef_synchronizer_2eproto,
     "synchronizer.proto",
     &descriptor_table_synchronizer_2eproto_once,
     descriptor_table_synchronizer_2eproto_deps,
     1,
-    2,
+    3,
     schemas,
     file_default_instances,
     TableStruct_synchronizer_2eproto::offsets,
@@ -174,6 +225,10 @@ SyncRequest::SyncRequest(const SyncRequest& from)
 
     , decltype(_impl_.type_) {}
 
+    , decltype(_impl_.username_) {}
+
+    , decltype(_impl_.followname_) {}
+
     , decltype(_impl_.clusterid_) {}
 
     , /*decltype(_impl_._cached_size_)*/{}};
@@ -193,6 +248,20 @@ SyncRequest::SyncRequest(const SyncRequest& from)
   if (!from._internal_type().empty()) {
     _this->_impl_.type_.Set(from._internal_type(), _this->GetArenaForAllocation());
   }
+  _impl_.username_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+        _impl_.username_.Set("", GetArenaForAllocation());
+  #endif  // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_username().empty()) {
+    _this->_impl_.username_.Set(from._internal_username(), _this->GetArenaForAllocation());
+  }
+  _impl_.followname_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+        _impl_.followname_.Set("", GetArenaForAllocation());
+  #endif  // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_followname().empty()) {
+    _this->_impl_.followname_.Set(from._internal_followname(), _this->GetArenaForAllocation());
+  }
   _this->_impl_.clusterid_ = from._impl_.clusterid_;
   // @@protoc_insertion_point(copy_constructor:csce438.SyncRequest)
 }
@@ -205,6 +274,10 @@ inline void SyncRequest::SharedCtor(::_pb::Arena* arena) {
 
     , decltype(_impl_.type_) {}
 
+    , decltype(_impl_.username_) {}
+
+    , decltype(_impl_.followname_) {}
+
     , decltype(_impl_.clusterid_) { 0 }
 
     , /*decltype(_impl_._cached_size_)*/{}
@@ -216,6 +289,14 @@ inline void SyncRequest::SharedCtor(::_pb::Arena* arena) {
   _impl_.type_.InitDefault();
   #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
         _impl_.type_.Set("", GetArenaForAllocation());
+  #endif  // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  _impl_.username_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+        _impl_.username_.Set("", GetArenaForAllocation());
+  #endif  // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  _impl_.followname_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+        _impl_.followname_.Set("", GetArenaForAllocation());
   #endif  // PROTOBUF_FORCE_COPY_DEFAULT_STRING
 }
 
@@ -233,6 +314,8 @@ inline void SyncRequest::SharedDtor() {
   _internal_mutable_users()->~RepeatedPtrField();
   _impl_.message_.Destroy();
   _impl_.type_.Destroy();
+  _impl_.username_.Destroy();
+  _impl_.followname_.Destroy();
 }
 
 void SyncRequest::SetCachedSize(int size) const {
@@ -248,6 +331,8 @@ void SyncRequest::Clear() {
   _internal_mutable_users()->Clear();
   _impl_.message_.ClearToEmpty();
   _impl_.type_.ClearToEmpty();
+  _impl_.username_.ClearToEmpty();
+  _impl_.followname_.ClearToEmpty();
   _impl_.clusterid_ = 0;
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
@@ -301,6 +386,28 @@ const char* SyncRequest::_InternalParse(const char* ptr, ::_pbi::ParseContext* c
         if (PROTOBUF_PREDICT_TRUE(static_cast<::uint8_t>(tag) == 32)) {
           _impl_.clusterid_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
+        } else {
+          goto handle_unusual;
+        }
+        continue;
+      // string username = 5;
+      case 5:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::uint8_t>(tag) == 42)) {
+          auto str = _internal_mutable_username();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, "csce438.SyncRequest.username"));
+        } else {
+          goto handle_unusual;
+        }
+        continue;
+      // string followname = 6;
+      case 6:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::uint8_t>(tag) == 50)) {
+          auto str = _internal_mutable_followname();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, "csce438.SyncRequest.followname"));
         } else {
           goto handle_unusual;
         }
@@ -365,6 +472,22 @@ failure:
         4, this->_internal_clusterid(), target);
   }
 
+  // string username = 5;
+  if (!this->_internal_username().empty()) {
+    const std::string& _s = this->_internal_username();
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+        _s.data(), static_cast<int>(_s.length()), ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE, "csce438.SyncRequest.username");
+    target = stream->WriteStringMaybeAliased(5, _s, target);
+  }
+
+  // string followname = 6;
+  if (!this->_internal_followname().empty()) {
+    const std::string& _s = this->_internal_followname();
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+        _s.data(), static_cast<int>(_s.length()), ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE, "csce438.SyncRequest.followname");
+    target = stream->WriteStringMaybeAliased(6, _s, target);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
@@ -400,6 +523,18 @@ failure:
                                     this->_internal_type());
   }
 
+  // string username = 5;
+  if (!this->_internal_username().empty()) {
+    total_size += 1 + ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+                                    this->_internal_username());
+  }
+
+  // string followname = 6;
+  if (!this->_internal_followname().empty()) {
+    total_size += 1 + ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+                                    this->_internal_followname());
+  }
+
   // int32 ClusterID = 4;
   if (this->_internal_clusterid() != 0) {
     total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(
@@ -431,6 +566,12 @@ void SyncRequest::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PR
   if (!from._internal_type().empty()) {
     _this->_internal_set_type(from._internal_type());
   }
+  if (!from._internal_username().empty()) {
+    _this->_internal_set_username(from._internal_username());
+  }
+  if (!from._internal_followname().empty()) {
+    _this->_internal_set_followname(from._internal_followname());
+  }
   if (from._internal_clusterid() != 0) {
     _this->_internal_set_clusterid(from._internal_clusterid());
   }
@@ -459,6 +600,10 @@ void SyncRequest::InternalSwap(SyncRequest* other) {
                                        &other->_impl_.message_, rhs_arena);
   ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.type_, lhs_arena,
                                        &other->_impl_.type_, rhs_arena);
+  ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.username_, lhs_arena,
+                                       &other->_impl_.username_, rhs_arena);
+  ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.followname_, lhs_arena,
+                                       &other->_impl_.followname_, rhs_arena);
 
   swap(_impl_.clusterid_, other->_impl_.clusterid_);
 }
@@ -641,6 +786,325 @@ void SyncReply::InternalSwap(SyncReply* other) {
       &descriptor_table_synchronizer_2eproto_getter, &descriptor_table_synchronizer_2eproto_once,
       file_level_metadata_synchronizer_2eproto[1]);
 }
+// ===================================================================
+
+class timelineRequest::_Internal {
+ public:
+};
+
+timelineRequest::timelineRequest(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
+  SharedCtor(arena);
+  // @@protoc_insertion_point(arena_constructor:csce438.timelineRequest)
+}
+timelineRequest::timelineRequest(const timelineRequest& from)
+  : ::PROTOBUF_NAMESPACE_ID::Message() {
+  timelineRequest* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.message_){from._impl_.message_}
+    , decltype(_impl_.timestamp_){from._impl_.timestamp_}
+    , decltype(_impl_.username_) {}
+
+    , decltype(_impl_.follower_name_) {}
+
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  _impl_.username_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+        _impl_.username_.Set("", GetArenaForAllocation());
+  #endif  // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_username().empty()) {
+    _this->_impl_.username_.Set(from._internal_username(), _this->GetArenaForAllocation());
+  }
+  _impl_.follower_name_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+        _impl_.follower_name_.Set("", GetArenaForAllocation());
+  #endif  // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_follower_name().empty()) {
+    _this->_impl_.follower_name_.Set(from._internal_follower_name(), _this->GetArenaForAllocation());
+  }
+  // @@protoc_insertion_point(copy_constructor:csce438.timelineRequest)
+}
+
+inline void timelineRequest::SharedCtor(::_pb::Arena* arena) {
+  (void)arena;
+  new (&_impl_) Impl_{
+      decltype(_impl_.message_){arena}
+    , decltype(_impl_.timestamp_){arena}
+    , decltype(_impl_.username_) {}
+
+    , decltype(_impl_.follower_name_) {}
+
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+  _impl_.username_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+        _impl_.username_.Set("", GetArenaForAllocation());
+  #endif  // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  _impl_.follower_name_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+        _impl_.follower_name_.Set("", GetArenaForAllocation());
+  #endif  // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+}
+
+timelineRequest::~timelineRequest() {
+  // @@protoc_insertion_point(destructor:csce438.timelineRequest)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>()) {
+  (void)arena;
+    return;
+  }
+  SharedDtor();
+}
+
+inline void timelineRequest::SharedDtor() {
+  ABSL_DCHECK(GetArenaForAllocation() == nullptr);
+  _internal_mutable_message()->~RepeatedPtrField();
+  _internal_mutable_timestamp()->~RepeatedPtrField();
+  _impl_.username_.Destroy();
+  _impl_.follower_name_.Destroy();
+}
+
+void timelineRequest::SetCachedSize(int size) const {
+  _impl_._cached_size_.Set(size);
+}
+
+void timelineRequest::Clear() {
+// @@protoc_insertion_point(message_clear_start:csce438.timelineRequest)
+  ::uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  _internal_mutable_message()->Clear();
+  _internal_mutable_timestamp()->Clear();
+  _impl_.username_.ClearToEmpty();
+  _impl_.follower_name_.ClearToEmpty();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
+}
+
+const char* timelineRequest::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    ::uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // string username = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::uint8_t>(tag) == 10)) {
+          auto str = _internal_mutable_username();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, "csce438.timelineRequest.username"));
+        } else {
+          goto handle_unusual;
+        }
+        continue;
+      // repeated string message = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::uint8_t>(tag) == 18)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            auto str = _internal_add_message();
+            ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+            CHK_(ptr);
+            CHK_(::_pbi::VerifyUTF8(str, "csce438.timelineRequest.message"));
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<18>(ptr));
+        } else {
+          goto handle_unusual;
+        }
+        continue;
+      // repeated string timestamp = 3;
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::uint8_t>(tag) == 26)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            auto str = _internal_add_timestamp();
+            ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+            CHK_(ptr);
+            CHK_(::_pbi::VerifyUTF8(str, "csce438.timelineRequest.timestamp"));
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<26>(ptr));
+        } else {
+          goto handle_unusual;
+        }
+        continue;
+      // string follower_name = 4;
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::uint8_t>(tag) == 34)) {
+          auto str = _internal_mutable_follower_name();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, "csce438.timelineRequest.follower_name"));
+        } else {
+          goto handle_unusual;
+        }
+        continue;
+      default:
+        goto handle_unusual;
+    }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
+  }  // while
+message_done:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto message_done;
+#undef CHK_
+}
+
+::uint8_t* timelineRequest::_InternalSerialize(
+    ::uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:csce438.timelineRequest)
+  ::uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // string username = 1;
+  if (!this->_internal_username().empty()) {
+    const std::string& _s = this->_internal_username();
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+        _s.data(), static_cast<int>(_s.length()), ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE, "csce438.timelineRequest.username");
+    target = stream->WriteStringMaybeAliased(1, _s, target);
+  }
+
+  // repeated string message = 2;
+  for (int i = 0, n = this->_internal_message_size(); i < n; ++i) {
+    const auto& s = this->_internal_message(i);
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+        s.data(), static_cast<int>(s.length()), ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE, "csce438.timelineRequest.message");
+    target = stream->WriteString(2, s, target);
+  }
+
+  // repeated string timestamp = 3;
+  for (int i = 0, n = this->_internal_timestamp_size(); i < n; ++i) {
+    const auto& s = this->_internal_timestamp(i);
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+        s.data(), static_cast<int>(s.length()), ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE, "csce438.timelineRequest.timestamp");
+    target = stream->WriteString(3, s, target);
+  }
+
+  // string follower_name = 4;
+  if (!this->_internal_follower_name().empty()) {
+    const std::string& _s = this->_internal_follower_name();
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+        _s.data(), static_cast<int>(_s.length()), ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE, "csce438.timelineRequest.follower_name");
+    target = stream->WriteStringMaybeAliased(4, _s, target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:csce438.timelineRequest)
+  return target;
+}
+
+::size_t timelineRequest::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:csce438.timelineRequest)
+  ::size_t total_size = 0;
+
+  ::uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // repeated string message = 2;
+  total_size += 1 * ::PROTOBUF_NAMESPACE_ID::internal::FromIntSize(_internal_message().size());
+  for (int i = 0, n = _internal_message().size(); i < n; ++i) {
+    total_size += ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        _internal_message().Get(i));
+  }
+
+  // repeated string timestamp = 3;
+  total_size += 1 * ::PROTOBUF_NAMESPACE_ID::internal::FromIntSize(_internal_timestamp().size());
+  for (int i = 0, n = _internal_timestamp().size(); i < n; ++i) {
+    total_size += ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        _internal_timestamp().Get(i));
+  }
+
+  // string username = 1;
+  if (!this->_internal_username().empty()) {
+    total_size += 1 + ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+                                    this->_internal_username());
+  }
+
+  // string follower_name = 4;
+  if (!this->_internal_follower_name().empty()) {
+    total_size += 1 + ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+                                    this->_internal_follower_name());
+  }
+
+  return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
+}
+
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData timelineRequest::_class_data_ = {
+    ::PROTOBUF_NAMESPACE_ID::Message::CopyWithSourceCheck,
+    timelineRequest::MergeImpl
+};
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*timelineRequest::GetClassData() const { return &_class_data_; }
+
+
+void timelineRequest::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg) {
+  auto* const _this = static_cast<timelineRequest*>(&to_msg);
+  auto& from = static_cast<const timelineRequest&>(from_msg);
+  // @@protoc_insertion_point(class_specific_merge_from_start:csce438.timelineRequest)
+  ABSL_DCHECK_NE(&from, _this);
+  ::uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  _this->_internal_mutable_message()->MergeFrom(from._internal_message());
+  _this->_internal_mutable_timestamp()->MergeFrom(from._internal_timestamp());
+  if (!from._internal_username().empty()) {
+    _this->_internal_set_username(from._internal_username());
+  }
+  if (!from._internal_follower_name().empty()) {
+    _this->_internal_set_follower_name(from._internal_follower_name());
+  }
+  _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+}
+
+void timelineRequest::CopyFrom(const timelineRequest& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:csce438.timelineRequest)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool timelineRequest::IsInitialized() const {
+  return true;
+}
+
+void timelineRequest::InternalSwap(timelineRequest* other) {
+  using std::swap;
+  auto* lhs_arena = GetArenaForAllocation();
+  auto* rhs_arena = other->GetArenaForAllocation();
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  _internal_mutable_message()->InternalSwap(
+      other->_internal_mutable_message());
+  _internal_mutable_timestamp()->InternalSwap(
+      other->_internal_mutable_timestamp());
+  ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.username_, lhs_arena,
+                                       &other->_impl_.username_, rhs_arena);
+  ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.follower_name_, lhs_arena,
+                                       &other->_impl_.follower_name_, rhs_arena);
+}
+
+::PROTOBUF_NAMESPACE_ID::Metadata timelineRequest::GetMetadata() const {
+  return ::_pbi::AssignDescriptors(
+      &descriptor_table_synchronizer_2eproto_getter, &descriptor_table_synchronizer_2eproto_once,
+      file_level_metadata_synchronizer_2eproto[2]);
+}
 // @@protoc_insertion_point(namespace_scope)
 }  // namespace csce438
 PROTOBUF_NAMESPACE_OPEN
@@ -651,6 +1115,10 @@ Arena::CreateMaybeMessage< ::csce438::SyncRequest >(Arena* arena) {
 template<> PROTOBUF_NOINLINE ::csce438::SyncReply*
 Arena::CreateMaybeMessage< ::csce438::SyncReply >(Arena* arena) {
   return Arena::CreateMessageInternal< ::csce438::SyncReply >(arena);
+}
+template<> PROTOBUF_NOINLINE ::csce438::timelineRequest*
+Arena::CreateMaybeMessage< ::csce438::timelineRequest >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::csce438::timelineRequest >(arena);
 }
 PROTOBUF_NAMESPACE_CLOSE
 // @@protoc_insertion_point(global_scope)

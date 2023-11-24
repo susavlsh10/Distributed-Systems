@@ -48,7 +48,7 @@ void appendPostToFile(const std::string& time, const std::string& user, const st
     std::ofstream outputFile(filename, std::ios::app); // Open the file for appending
 
     if (!outputFile) {
-        std::cerr << "Failed to open " << filename << " for appending" << std::endl;
+        //std::cerr << "appendPostToFile: Failed to open " << filename << " for appending" << std::endl;
         return;
     }
 
@@ -65,7 +65,7 @@ void appendStringToFile(const std::string& filename, const std::string& stringTo
     std::ofstream outputFile(filename, std::ios::app); // Open the file for appending
 
     if (!outputFile) {
-        std::cerr << "Failed to open " << filename << " for appending" << std::endl;
+        std::cerr << "appendStringToFile: Failed to open " << filename << " for appending" << std::endl;
         return;
     }
 
@@ -127,4 +127,32 @@ std::vector<int> getOtherIntegers(const std::vector<int>& nums) {
     std::set_difference(numSet.begin(), numSet.end(), nums.begin(), nums.end(), std::back_inserter(result));
 
     return result;
+}
+
+std::vector<std::string> get_lines_from_file(std::string filename){
+  std::vector<std::string> users;
+  std::string user;
+  std::ifstream file; 
+  file.open(filename);
+  if(file.peek() == std::ifstream::traits_type::eof()){
+    //return empty vector if empty file
+    //std::cout<<"returned empty vector bc empty file"<<std::endl;
+    file.close();
+    return users;
+  }
+  while(file){
+    getline(file,user);
+
+    if(!user.empty())
+      users.push_back(user);
+  } 
+
+  file.close();
+
+  //std::cout<<"File: "<<filename<<" has users:"<<std::endl;
+  /*for(int i = 0; i<users.size(); i++){
+    std::cout<<users[i]<<std::endl;
+  }*/ 
+
+  return users;
 }

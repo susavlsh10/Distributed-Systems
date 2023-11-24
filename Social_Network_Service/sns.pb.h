@@ -64,6 +64,9 @@ extern ReplyDefaultTypeInternal _Reply_default_instance_;
 class Request;
 struct RequestDefaultTypeInternal;
 extern RequestDefaultTypeInternal _Request_default_instance_;
+class WorkerInfo;
+struct WorkerInfoDefaultTypeInternal;
+extern WorkerInfoDefaultTypeInternal _WorkerInfo_default_instance_;
 }  // namespace csce438
 PROTOBUF_NAMESPACE_OPEN
 template <>
@@ -74,6 +77,8 @@ template <>
 ::csce438::Reply* Arena::CreateMaybeMessage<::csce438::Reply>(Arena*);
 template <>
 ::csce438::Request* Arena::CreateMaybeMessage<::csce438::Request>(Arena*);
+template <>
+::csce438::WorkerInfo* Arena::CreateMaybeMessage<::csce438::WorkerInfo>(Arena*);
 PROTOBUF_NAMESPACE_CLOSE
 
 namespace csce438 {
@@ -452,6 +457,9 @@ class Request final :
   enum : int {
     kArgumentsFieldNumber = 2,
     kUsernameFieldNumber = 1,
+    kTypeFieldNumber = 3,
+    kMessageFieldNumber = 4,
+    kTimestampFieldNumber = 5,
   };
   // repeated string arguments = 2;
   int arguments_size() const;
@@ -503,6 +511,66 @@ class Request final :
   std::string* _internal_mutable_username();
 
   public:
+  // string type = 3;
+  void clear_type() ;
+  const std::string& type() const;
+
+
+
+
+  template <typename Arg_ = const std::string&, typename... Args_>
+  void set_type(Arg_&& arg, Args_... args);
+  std::string* mutable_type();
+  PROTOBUF_NODISCARD std::string* release_type();
+  void set_allocated_type(std::string* ptr);
+
+  private:
+  const std::string& _internal_type() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_type(
+      const std::string& value);
+  std::string* _internal_mutable_type();
+
+  public:
+  // string message = 4;
+  void clear_message() ;
+  const std::string& message() const;
+
+
+
+
+  template <typename Arg_ = const std::string&, typename... Args_>
+  void set_message(Arg_&& arg, Args_... args);
+  std::string* mutable_message();
+  PROTOBUF_NODISCARD std::string* release_message();
+  void set_allocated_message(std::string* ptr);
+
+  private:
+  const std::string& _internal_message() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_message(
+      const std::string& value);
+  std::string* _internal_mutable_message();
+
+  public:
+  // string timestamp = 5;
+  void clear_timestamp() ;
+  const std::string& timestamp() const;
+
+
+
+
+  template <typename Arg_ = const std::string&, typename... Args_>
+  void set_timestamp(Arg_&& arg, Args_... args);
+  std::string* mutable_timestamp();
+  PROTOBUF_NODISCARD std::string* release_timestamp();
+  void set_allocated_timestamp(std::string* ptr);
+
+  private:
+  const std::string& _internal_timestamp() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_timestamp(
+      const std::string& value);
+  std::string* _internal_mutable_timestamp();
+
+  public:
   // @@protoc_insertion_point(class_scope:csce438.Request)
  private:
   class _Internal;
@@ -513,6 +581,9 @@ class Request final :
   struct Impl_ {
     ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string> arguments_;
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr username_;
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr type_;
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr message_;
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr timestamp_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -883,6 +954,171 @@ class Message final :
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr username_;
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr msg_;
     ::PROTOBUF_NAMESPACE_ID::Timestamp* timestamp_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_sns_2eproto;
+};// -------------------------------------------------------------------
+
+class WorkerInfo final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:csce438.WorkerInfo) */ {
+ public:
+  inline WorkerInfo() : WorkerInfo(nullptr) {}
+  ~WorkerInfo() override;
+  template<typename = void>
+  explicit PROTOBUF_CONSTEXPR WorkerInfo(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  WorkerInfo(const WorkerInfo& from);
+  WorkerInfo(WorkerInfo&& from) noexcept
+    : WorkerInfo() {
+    *this = ::std::move(from);
+  }
+
+  inline WorkerInfo& operator=(const WorkerInfo& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline WorkerInfo& operator=(WorkerInfo&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  inline const ::PROTOBUF_NAMESPACE_ID::UnknownFieldSet& unknown_fields() const {
+    return _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance);
+  }
+  inline ::PROTOBUF_NAMESPACE_ID::UnknownFieldSet* mutable_unknown_fields() {
+    return _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const WorkerInfo& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const WorkerInfo* internal_default_instance() {
+    return reinterpret_cast<const WorkerInfo*>(
+               &_WorkerInfo_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    4;
+
+  friend void swap(WorkerInfo& a, WorkerInfo& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(WorkerInfo* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(WorkerInfo* other) {
+    if (other == this) return;
+    ABSL_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  WorkerInfo* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<WorkerInfo>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const WorkerInfo& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const WorkerInfo& from) {
+    WorkerInfo::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  ::size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  ::uint8_t* _InternalSerialize(
+      ::uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(WorkerInfo* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::absl::string_view FullMessageName() {
+    return "csce438.WorkerInfo";
+  }
+  protected:
+  explicit WorkerInfo(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kServerAddressFieldNumber = 1,
+  };
+  // string server_address = 1;
+  void clear_server_address() ;
+  const std::string& server_address() const;
+
+
+
+
+  template <typename Arg_ = const std::string&, typename... Args_>
+  void set_server_address(Arg_&& arg, Args_... args);
+  std::string* mutable_server_address();
+  PROTOBUF_NODISCARD std::string* release_server_address();
+  void set_allocated_server_address(std::string* ptr);
+
+  private:
+  const std::string& _internal_server_address() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_server_address(
+      const std::string& value);
+  std::string* _internal_mutable_server_address();
+
+  public:
+  // @@protoc_insertion_point(class_scope:csce438.WorkerInfo)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr server_address_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
   friend struct ::TableStruct_sns_2eproto;
@@ -1327,6 +1563,147 @@ Request::_internal_mutable_arguments() {
   return &_impl_.arguments_;
 }
 
+// string type = 3;
+inline void Request::clear_type() {
+  _impl_.type_.ClearToEmpty();
+}
+inline const std::string& Request::type() const {
+  // @@protoc_insertion_point(field_get:csce438.Request.type)
+  return _internal_type();
+}
+template <typename Arg_, typename... Args_>
+inline PROTOBUF_ALWAYS_INLINE void Request::set_type(Arg_&& arg,
+                                                     Args_... args) {
+  ;
+  _impl_.type_.Set(static_cast<Arg_&&>(arg), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:csce438.Request.type)
+}
+inline std::string* Request::mutable_type() {
+  std::string* _s = _internal_mutable_type();
+  // @@protoc_insertion_point(field_mutable:csce438.Request.type)
+  return _s;
+}
+inline const std::string& Request::_internal_type() const {
+  return _impl_.type_.Get();
+}
+inline void Request::_internal_set_type(const std::string& value) {
+  ;
+
+
+  _impl_.type_.Set(value, GetArenaForAllocation());
+}
+inline std::string* Request::_internal_mutable_type() {
+  ;
+  return _impl_.type_.Mutable( GetArenaForAllocation());
+}
+inline std::string* Request::release_type() {
+  // @@protoc_insertion_point(field_release:csce438.Request.type)
+  return _impl_.type_.Release();
+}
+inline void Request::set_allocated_type(std::string* value) {
+  _impl_.type_.SetAllocated(value, GetArenaForAllocation());
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+        if (_impl_.type_.IsDefault()) {
+          _impl_.type_.Set("", GetArenaForAllocation());
+        }
+  #endif  // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:csce438.Request.type)
+}
+
+// string message = 4;
+inline void Request::clear_message() {
+  _impl_.message_.ClearToEmpty();
+}
+inline const std::string& Request::message() const {
+  // @@protoc_insertion_point(field_get:csce438.Request.message)
+  return _internal_message();
+}
+template <typename Arg_, typename... Args_>
+inline PROTOBUF_ALWAYS_INLINE void Request::set_message(Arg_&& arg,
+                                                     Args_... args) {
+  ;
+  _impl_.message_.Set(static_cast<Arg_&&>(arg), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:csce438.Request.message)
+}
+inline std::string* Request::mutable_message() {
+  std::string* _s = _internal_mutable_message();
+  // @@protoc_insertion_point(field_mutable:csce438.Request.message)
+  return _s;
+}
+inline const std::string& Request::_internal_message() const {
+  return _impl_.message_.Get();
+}
+inline void Request::_internal_set_message(const std::string& value) {
+  ;
+
+
+  _impl_.message_.Set(value, GetArenaForAllocation());
+}
+inline std::string* Request::_internal_mutable_message() {
+  ;
+  return _impl_.message_.Mutable( GetArenaForAllocation());
+}
+inline std::string* Request::release_message() {
+  // @@protoc_insertion_point(field_release:csce438.Request.message)
+  return _impl_.message_.Release();
+}
+inline void Request::set_allocated_message(std::string* value) {
+  _impl_.message_.SetAllocated(value, GetArenaForAllocation());
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+        if (_impl_.message_.IsDefault()) {
+          _impl_.message_.Set("", GetArenaForAllocation());
+        }
+  #endif  // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:csce438.Request.message)
+}
+
+// string timestamp = 5;
+inline void Request::clear_timestamp() {
+  _impl_.timestamp_.ClearToEmpty();
+}
+inline const std::string& Request::timestamp() const {
+  // @@protoc_insertion_point(field_get:csce438.Request.timestamp)
+  return _internal_timestamp();
+}
+template <typename Arg_, typename... Args_>
+inline PROTOBUF_ALWAYS_INLINE void Request::set_timestamp(Arg_&& arg,
+                                                     Args_... args) {
+  ;
+  _impl_.timestamp_.Set(static_cast<Arg_&&>(arg), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:csce438.Request.timestamp)
+}
+inline std::string* Request::mutable_timestamp() {
+  std::string* _s = _internal_mutable_timestamp();
+  // @@protoc_insertion_point(field_mutable:csce438.Request.timestamp)
+  return _s;
+}
+inline const std::string& Request::_internal_timestamp() const {
+  return _impl_.timestamp_.Get();
+}
+inline void Request::_internal_set_timestamp(const std::string& value) {
+  ;
+
+
+  _impl_.timestamp_.Set(value, GetArenaForAllocation());
+}
+inline std::string* Request::_internal_mutable_timestamp() {
+  ;
+  return _impl_.timestamp_.Mutable( GetArenaForAllocation());
+}
+inline std::string* Request::release_timestamp() {
+  // @@protoc_insertion_point(field_release:csce438.Request.timestamp)
+  return _impl_.timestamp_.Release();
+}
+inline void Request::set_allocated_timestamp(std::string* value) {
+  _impl_.timestamp_.SetAllocated(value, GetArenaForAllocation());
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+        if (_impl_.timestamp_.IsDefault()) {
+          _impl_.timestamp_.Set("", GetArenaForAllocation());
+        }
+  #endif  // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:csce438.Request.timestamp)
+}
+
 // -------------------------------------------------------------------
 
 // Reply
@@ -1558,6 +1935,57 @@ inline void Message::set_allocated_timestamp(::PROTOBUF_NAMESPACE_ID::Timestamp*
   }
   _impl_.timestamp_ = timestamp;
   // @@protoc_insertion_point(field_set_allocated:csce438.Message.timestamp)
+}
+
+// -------------------------------------------------------------------
+
+// WorkerInfo
+
+// string server_address = 1;
+inline void WorkerInfo::clear_server_address() {
+  _impl_.server_address_.ClearToEmpty();
+}
+inline const std::string& WorkerInfo::server_address() const {
+  // @@protoc_insertion_point(field_get:csce438.WorkerInfo.server_address)
+  return _internal_server_address();
+}
+template <typename Arg_, typename... Args_>
+inline PROTOBUF_ALWAYS_INLINE void WorkerInfo::set_server_address(Arg_&& arg,
+                                                     Args_... args) {
+  ;
+  _impl_.server_address_.Set(static_cast<Arg_&&>(arg), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:csce438.WorkerInfo.server_address)
+}
+inline std::string* WorkerInfo::mutable_server_address() {
+  std::string* _s = _internal_mutable_server_address();
+  // @@protoc_insertion_point(field_mutable:csce438.WorkerInfo.server_address)
+  return _s;
+}
+inline const std::string& WorkerInfo::_internal_server_address() const {
+  return _impl_.server_address_.Get();
+}
+inline void WorkerInfo::_internal_set_server_address(const std::string& value) {
+  ;
+
+
+  _impl_.server_address_.Set(value, GetArenaForAllocation());
+}
+inline std::string* WorkerInfo::_internal_mutable_server_address() {
+  ;
+  return _impl_.server_address_.Mutable( GetArenaForAllocation());
+}
+inline std::string* WorkerInfo::release_server_address() {
+  // @@protoc_insertion_point(field_release:csce438.WorkerInfo.server_address)
+  return _impl_.server_address_.Release();
+}
+inline void WorkerInfo::set_allocated_server_address(std::string* value) {
+  _impl_.server_address_.SetAllocated(value, GetArenaForAllocation());
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+        if (_impl_.server_address_.IsDefault()) {
+          _impl_.server_address_.Set("", GetArenaForAllocation());
+        }
+  #endif  // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:csce438.WorkerInfo.server_address)
 }
 
 #ifdef __GNUC__

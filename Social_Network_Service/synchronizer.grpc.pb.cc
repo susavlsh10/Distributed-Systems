@@ -34,113 +34,134 @@ std::unique_ptr< SynchService::Stub> SynchService::NewStub(const std::shared_ptr
 }
 
 SynchService::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options)
-  : channel_(channel), rpcmethod_SyncUsers_(SynchService_method_names[0], options.suffix_for_stats(),::grpc::internal::RpcMethod::SERVER_STREAMING, channel)
-  , rpcmethod_SyncFollowers_(SynchService_method_names[1], options.suffix_for_stats(),::grpc::internal::RpcMethod::SERVER_STREAMING, channel)
-  , rpcmethod_SyncTimeline_(SynchService_method_names[2], options.suffix_for_stats(),::grpc::internal::RpcMethod::SERVER_STREAMING, channel)
+  : channel_(channel), rpcmethod_SyncUsers_(SynchService_method_names[0], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_SyncFollowers_(SynchService_method_names[1], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_SyncTimeline_(SynchService_method_names[2], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   {}
 
-::grpc::ClientReader< ::csce438::SyncReply>* SynchService::Stub::SyncUsersRaw(::grpc::ClientContext* context, const ::csce438::SyncRequest& request) {
-  return ::grpc::internal::ClientReaderFactory< ::csce438::SyncReply>::Create(channel_.get(), rpcmethod_SyncUsers_, context, request);
+::grpc::Status SynchService::Stub::SyncUsers(::grpc::ClientContext* context, const ::csce438::SyncRequest& request, ::csce438::SyncReply* response) {
+  return ::grpc::internal::BlockingUnaryCall< ::csce438::SyncRequest, ::csce438::SyncReply, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_SyncUsers_, context, request, response);
 }
 
-void SynchService::Stub::async::SyncUsers(::grpc::ClientContext* context, const ::csce438::SyncRequest* request, ::grpc::ClientReadReactor< ::csce438::SyncReply>* reactor) {
-  ::grpc::internal::ClientCallbackReaderFactory< ::csce438::SyncReply>::Create(stub_->channel_.get(), stub_->rpcmethod_SyncUsers_, context, request, reactor);
+void SynchService::Stub::async::SyncUsers(::grpc::ClientContext* context, const ::csce438::SyncRequest* request, ::csce438::SyncReply* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::csce438::SyncRequest, ::csce438::SyncReply, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SyncUsers_, context, request, response, std::move(f));
 }
 
-::grpc::ClientAsyncReader< ::csce438::SyncReply>* SynchService::Stub::AsyncSyncUsersRaw(::grpc::ClientContext* context, const ::csce438::SyncRequest& request, ::grpc::CompletionQueue* cq, void* tag) {
-  return ::grpc::internal::ClientAsyncReaderFactory< ::csce438::SyncReply>::Create(channel_.get(), cq, rpcmethod_SyncUsers_, context, request, true, tag);
+void SynchService::Stub::async::SyncUsers(::grpc::ClientContext* context, const ::csce438::SyncRequest* request, ::csce438::SyncReply* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SyncUsers_, context, request, response, reactor);
 }
 
-::grpc::ClientAsyncReader< ::csce438::SyncReply>* SynchService::Stub::PrepareAsyncSyncUsersRaw(::grpc::ClientContext* context, const ::csce438::SyncRequest& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncReaderFactory< ::csce438::SyncReply>::Create(channel_.get(), cq, rpcmethod_SyncUsers_, context, request, false, nullptr);
+::grpc::ClientAsyncResponseReader< ::csce438::SyncReply>* SynchService::Stub::PrepareAsyncSyncUsersRaw(::grpc::ClientContext* context, const ::csce438::SyncRequest& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::csce438::SyncReply, ::csce438::SyncRequest, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_SyncUsers_, context, request);
 }
 
-::grpc::ClientReader< ::csce438::SyncReply>* SynchService::Stub::SyncFollowersRaw(::grpc::ClientContext* context, const ::csce438::SyncRequest& request) {
-  return ::grpc::internal::ClientReaderFactory< ::csce438::SyncReply>::Create(channel_.get(), rpcmethod_SyncFollowers_, context, request);
+::grpc::ClientAsyncResponseReader< ::csce438::SyncReply>* SynchService::Stub::AsyncSyncUsersRaw(::grpc::ClientContext* context, const ::csce438::SyncRequest& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncSyncUsersRaw(context, request, cq);
+  result->StartCall();
+  return result;
 }
 
-void SynchService::Stub::async::SyncFollowers(::grpc::ClientContext* context, const ::csce438::SyncRequest* request, ::grpc::ClientReadReactor< ::csce438::SyncReply>* reactor) {
-  ::grpc::internal::ClientCallbackReaderFactory< ::csce438::SyncReply>::Create(stub_->channel_.get(), stub_->rpcmethod_SyncFollowers_, context, request, reactor);
+::grpc::Status SynchService::Stub::SyncFollowers(::grpc::ClientContext* context, const ::csce438::SyncRequest& request, ::csce438::SyncReply* response) {
+  return ::grpc::internal::BlockingUnaryCall< ::csce438::SyncRequest, ::csce438::SyncReply, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_SyncFollowers_, context, request, response);
 }
 
-::grpc::ClientAsyncReader< ::csce438::SyncReply>* SynchService::Stub::AsyncSyncFollowersRaw(::grpc::ClientContext* context, const ::csce438::SyncRequest& request, ::grpc::CompletionQueue* cq, void* tag) {
-  return ::grpc::internal::ClientAsyncReaderFactory< ::csce438::SyncReply>::Create(channel_.get(), cq, rpcmethod_SyncFollowers_, context, request, true, tag);
+void SynchService::Stub::async::SyncFollowers(::grpc::ClientContext* context, const ::csce438::SyncRequest* request, ::csce438::SyncReply* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::csce438::SyncRequest, ::csce438::SyncReply, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SyncFollowers_, context, request, response, std::move(f));
 }
 
-::grpc::ClientAsyncReader< ::csce438::SyncReply>* SynchService::Stub::PrepareAsyncSyncFollowersRaw(::grpc::ClientContext* context, const ::csce438::SyncRequest& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncReaderFactory< ::csce438::SyncReply>::Create(channel_.get(), cq, rpcmethod_SyncFollowers_, context, request, false, nullptr);
+void SynchService::Stub::async::SyncFollowers(::grpc::ClientContext* context, const ::csce438::SyncRequest* request, ::csce438::SyncReply* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SyncFollowers_, context, request, response, reactor);
 }
 
-::grpc::ClientReader< ::csce438::SyncReply>* SynchService::Stub::SyncTimelineRaw(::grpc::ClientContext* context, const ::csce438::SyncRequest& request) {
-  return ::grpc::internal::ClientReaderFactory< ::csce438::SyncReply>::Create(channel_.get(), rpcmethod_SyncTimeline_, context, request);
+::grpc::ClientAsyncResponseReader< ::csce438::SyncReply>* SynchService::Stub::PrepareAsyncSyncFollowersRaw(::grpc::ClientContext* context, const ::csce438::SyncRequest& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::csce438::SyncReply, ::csce438::SyncRequest, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_SyncFollowers_, context, request);
 }
 
-void SynchService::Stub::async::SyncTimeline(::grpc::ClientContext* context, const ::csce438::SyncRequest* request, ::grpc::ClientReadReactor< ::csce438::SyncReply>* reactor) {
-  ::grpc::internal::ClientCallbackReaderFactory< ::csce438::SyncReply>::Create(stub_->channel_.get(), stub_->rpcmethod_SyncTimeline_, context, request, reactor);
+::grpc::ClientAsyncResponseReader< ::csce438::SyncReply>* SynchService::Stub::AsyncSyncFollowersRaw(::grpc::ClientContext* context, const ::csce438::SyncRequest& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncSyncFollowersRaw(context, request, cq);
+  result->StartCall();
+  return result;
 }
 
-::grpc::ClientAsyncReader< ::csce438::SyncReply>* SynchService::Stub::AsyncSyncTimelineRaw(::grpc::ClientContext* context, const ::csce438::SyncRequest& request, ::grpc::CompletionQueue* cq, void* tag) {
-  return ::grpc::internal::ClientAsyncReaderFactory< ::csce438::SyncReply>::Create(channel_.get(), cq, rpcmethod_SyncTimeline_, context, request, true, tag);
+::grpc::Status SynchService::Stub::SyncTimeline(::grpc::ClientContext* context, const ::csce438::timelineRequest& request, ::csce438::SyncReply* response) {
+  return ::grpc::internal::BlockingUnaryCall< ::csce438::timelineRequest, ::csce438::SyncReply, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_SyncTimeline_, context, request, response);
 }
 
-::grpc::ClientAsyncReader< ::csce438::SyncReply>* SynchService::Stub::PrepareAsyncSyncTimelineRaw(::grpc::ClientContext* context, const ::csce438::SyncRequest& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncReaderFactory< ::csce438::SyncReply>::Create(channel_.get(), cq, rpcmethod_SyncTimeline_, context, request, false, nullptr);
+void SynchService::Stub::async::SyncTimeline(::grpc::ClientContext* context, const ::csce438::timelineRequest* request, ::csce438::SyncReply* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::csce438::timelineRequest, ::csce438::SyncReply, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SyncTimeline_, context, request, response, std::move(f));
+}
+
+void SynchService::Stub::async::SyncTimeline(::grpc::ClientContext* context, const ::csce438::timelineRequest* request, ::csce438::SyncReply* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SyncTimeline_, context, request, response, reactor);
+}
+
+::grpc::ClientAsyncResponseReader< ::csce438::SyncReply>* SynchService::Stub::PrepareAsyncSyncTimelineRaw(::grpc::ClientContext* context, const ::csce438::timelineRequest& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::csce438::SyncReply, ::csce438::timelineRequest, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_SyncTimeline_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::csce438::SyncReply>* SynchService::Stub::AsyncSyncTimelineRaw(::grpc::ClientContext* context, const ::csce438::timelineRequest& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncSyncTimelineRaw(context, request, cq);
+  result->StartCall();
+  return result;
 }
 
 SynchService::Service::Service() {
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       SynchService_method_names[0],
-      ::grpc::internal::RpcMethod::SERVER_STREAMING,
-      new ::grpc::internal::ServerStreamingHandler< SynchService::Service, ::csce438::SyncRequest, ::csce438::SyncReply>(
+      ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler< SynchService::Service, ::csce438::SyncRequest, ::csce438::SyncReply, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
           [](SynchService::Service* service,
              ::grpc::ServerContext* ctx,
              const ::csce438::SyncRequest* req,
-             ::grpc::ServerWriter<::csce438::SyncReply>* writer) {
-               return service->SyncUsers(ctx, req, writer);
+             ::csce438::SyncReply* resp) {
+               return service->SyncUsers(ctx, req, resp);
              }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       SynchService_method_names[1],
-      ::grpc::internal::RpcMethod::SERVER_STREAMING,
-      new ::grpc::internal::ServerStreamingHandler< SynchService::Service, ::csce438::SyncRequest, ::csce438::SyncReply>(
+      ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler< SynchService::Service, ::csce438::SyncRequest, ::csce438::SyncReply, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
           [](SynchService::Service* service,
              ::grpc::ServerContext* ctx,
              const ::csce438::SyncRequest* req,
-             ::grpc::ServerWriter<::csce438::SyncReply>* writer) {
-               return service->SyncFollowers(ctx, req, writer);
+             ::csce438::SyncReply* resp) {
+               return service->SyncFollowers(ctx, req, resp);
              }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       SynchService_method_names[2],
-      ::grpc::internal::RpcMethod::SERVER_STREAMING,
-      new ::grpc::internal::ServerStreamingHandler< SynchService::Service, ::csce438::SyncRequest, ::csce438::SyncReply>(
+      ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler< SynchService::Service, ::csce438::timelineRequest, ::csce438::SyncReply, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
           [](SynchService::Service* service,
              ::grpc::ServerContext* ctx,
-             const ::csce438::SyncRequest* req,
-             ::grpc::ServerWriter<::csce438::SyncReply>* writer) {
-               return service->SyncTimeline(ctx, req, writer);
+             const ::csce438::timelineRequest* req,
+             ::csce438::SyncReply* resp) {
+               return service->SyncTimeline(ctx, req, resp);
              }, this)));
 }
 
 SynchService::Service::~Service() {
 }
 
-::grpc::Status SynchService::Service::SyncUsers(::grpc::ServerContext* context, const ::csce438::SyncRequest* request, ::grpc::ServerWriter< ::csce438::SyncReply>* writer) {
+::grpc::Status SynchService::Service::SyncUsers(::grpc::ServerContext* context, const ::csce438::SyncRequest* request, ::csce438::SyncReply* response) {
   (void) context;
   (void) request;
-  (void) writer;
+  (void) response;
   return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
 }
 
-::grpc::Status SynchService::Service::SyncFollowers(::grpc::ServerContext* context, const ::csce438::SyncRequest* request, ::grpc::ServerWriter< ::csce438::SyncReply>* writer) {
+::grpc::Status SynchService::Service::SyncFollowers(::grpc::ServerContext* context, const ::csce438::SyncRequest* request, ::csce438::SyncReply* response) {
   (void) context;
   (void) request;
-  (void) writer;
+  (void) response;
   return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
 }
 
-::grpc::Status SynchService::Service::SyncTimeline(::grpc::ServerContext* context, const ::csce438::SyncRequest* request, ::grpc::ServerWriter< ::csce438::SyncReply>* writer) {
+::grpc::Status SynchService::Service::SyncTimeline(::grpc::ServerContext* context, const ::csce438::timelineRequest* request, ::csce438::SyncReply* response) {
   (void) context;
   (void) request;
-  (void) writer;
+  (void) response;
   return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
 }
 

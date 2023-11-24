@@ -97,13 +97,14 @@ struct Client {
   bool operator==(const Client& c1) const{
     return (username == c1.username);
   }
-  std::string user_file; // user.txt, 
-  std::string user_following_file; //user_following.txt, the timeline is stored here
-  std::string user_follower; // follower relationship is stored here.
+  std::string user_file; // user.txt, store timeline here
+  std::string user_following_file; //user_following.txt, the users who the current user is following is stored here
+  std::string user_follower; // the users who follow the current user is stored here
+  std::string user_timeline_file; // the timeline of the current user is stored here
 
   void create_files(){
     // Create empty files
-    createEmptyFile(user_file); createEmptyFile(user_following_file); createEmptyFile(user_follower);
+    createEmptyFile(user_file); createEmptyFile(user_following_file); createEmptyFile(user_follower); createEmptyFile(user_timeline_file);
   };
 };
 
@@ -118,6 +119,7 @@ class SNSServiceImpl final : public SNSService::Service {
     int client_count = 0;
     std::string ServerdirName;
     std::string AllUsersFile;
+    std::string LocalUsersFile;
     bool isMaster = false;
     bool workerConnected = false;
 
@@ -174,7 +176,6 @@ class SNSServiceImpl final : public SNSService::Service {
       RecoverState(clusterID, serverID);
 
 
-
     }
 
   // RPC RegisterWorker
@@ -194,7 +195,7 @@ class SNSServiceImpl final : public SNSService::Service {
 
   // RPC Sync
   Status Sync(ServerContext* context, const Request* request, Reply* reply) override {
-    std::cout << "Sync request received" <<std::endl;
+    //std::cout << "Sync request received" <<std::endl;
     // extract type of sync request
     std::string type = request->type();
     std::string user_name = request->username();
@@ -205,8 +206,8 @@ class SNSServiceImpl final : public SNSService::Service {
     ProcessFollowRequest(user_name, request->arguments(0), reply);
   } else if (type == "Unfollow") {
     ProcessUnfollowRequest(user_name, request->arguments(0), reply);
-  } else {
-    // Handle unrecognized type
+  } else if (type == "Timeline") {
+    ProcessTimelineRequest(user_name, request->message(), request->timestamp());
   }
 
     return Status::OK;
@@ -278,9 +279,16 @@ class SNSServiceImpl final : public SNSService::Service {
       log(INFO, "Follow successful");
 
       // save the follower relationship to the persistent storage
-      std::string follower_file = client_db[client_0_idx]->user_follower;
-      std::string update = "F " + follow_name;
+      std::string follower_file = client_db[client_0_idx]->user_following_file;
+      std::string update = follow_name;
       appendStringToFile(follower_file, update);
+
+      if (client_db[client_1_idx]->online){ // if the user is managed by the current server
+        // send a message to the client that user_name is following them
+        std::string following_file = client_db[client_1_idx]->user_follower;
+        std::string update = user_name;
+        appendStringToFile(following_file, update);
+      }
     
     } 
     else {
@@ -355,19 +363,17 @@ class SNSServiceImpl final : public SNSService::Service {
         // remove unfollow_name from user_name's following list
         std::cout << "erasing " << unfollow_name << " from " << user_name << "follow list" << std::endl;
         client_db[client_0_idx]->client_following.erase(client_db[client_0_idx]->client_following.begin()+idx);
-        std::cout << "erased 1. " << std::endl;
 
         //remove user_name from unfollow_name's followers list
         std::cout << "erasing " << user_name << " from " << unfollow_name << " follow list" << std::endl;
         client_db[client_1_idx]->client_followers.erase(client_db[client_1_idx]->client_followers.begin()+ idj);
-        std::cout << "erased 2. " << std::endl;
 
         reply->set_msg("Unfollow successful");
 
         // save the follower relationship to the persistent storage
-        std::string follower_file = client_db[client_0_idx]->user_follower;
-        std::string update = "U " + unfollow_name;
-        appendStringToFile(follower_file, update);
+        //std::string follower_file = client_db[client_0_idx]->user_follower;
+        //std::string update = "U " + unfollow_name;
+        //appendStringToFile(follower_file, update);
       }
       else{
         reply->set_msg("Not a follower");
@@ -403,6 +409,13 @@ class SNSServiceImpl final : public SNSService::Service {
         log(INFO, "Welcome back ");
         reply->set_msg("Welcome back");
         client_db[client_idx]->online = true;
+        client_db[client_idx]->username = user_name;
+        client_db[client_idx]->user_file = ServerdirName + user_name + ".txt";
+        client_db[client_idx]->user_following_file = ServerdirName + user_name + "_following.txt";
+        client_db[client_idx]->user_follower = ServerdirName + user_name + "_follower.txt";
+        client_db[client_idx]->user_timeline_file = ServerdirName + user_name + "_timeline.txt";
+        client_db[client_idx]->connected = false;
+
       //}
     } else { // new user 
       clientMap[user_name] = client_count;
@@ -413,7 +426,9 @@ class SNSServiceImpl final : public SNSService::Service {
       new_client->user_file = ServerdirName + user_name + ".txt";
       new_client->user_following_file = ServerdirName + user_name + "_following.txt";
       new_client->user_follower = ServerdirName + user_name + "_follower.txt";
+      new_client->user_timeline_file = ServerdirName + user_name + "_timeline.txt";
       new_client->online = true;
+      new_client->connected = false;
       new_client->create_files();
 
       client_db.push_back(new_client);
@@ -425,6 +440,7 @@ class SNSServiceImpl final : public SNSService::Service {
       // add the user to the AllUsers.txt file
       std::string update = user_name;
       appendStringToFile(AllUsersFile, update);
+      appendStringToFile(LocalUsersFile, update);
     }
   }
 
@@ -454,74 +470,146 @@ class SNSServiceImpl final : public SNSService::Service {
     return Status::OK;
   }
 
+  void ProcessTimelineRequest(const std::string username, const std::string msg, const std::string timestamp){
+    // find username in client_db
+    int client_idx = clientMap[username];
+    Client* user = client_db[client_idx];
+
+    // append to user.txt
+    //std::cout << "Syncing timefile for user " << username << " message = "<< msg << std::endl;
+    appendPostToFile(timestamp, username, msg, user->user_file);
+    appendPostToFile(timestamp, username, msg, user->user_timeline_file);
+
+    for (const Client* _client:  user->client_followers){
+      //append to formatted message _client.txt 
+      // Check if the client is online
+      if (_client->online){
+        //std::cout << "Writing to stream with user message" <<std::endl;
+        //_client->stream->Write(m);
+        appendPostToFile(timestamp, username, msg, _client->user_file); 
+      }
+         
+    }
+  }
+
+  void updateTimeline(ServerReaderWriter<Message, Message>* stream, std::string user_name, std::vector<std::string>& timestamps){
+    std::string user_file = ServerdirName + user_name + ".txt";
+    std::vector<Post> posts = readPostsFromFile(user_file);
+    //std::cout << "Updating timeline for user : " << user_name << std::endl;
+
+    // if post in posts not in timestamps, then write to stream
+    for (Post post: posts){
+      // check if post.time is in timestamps
+      if (std::find(timestamps.begin(), timestamps.end(), post.time) == timestamps.end()) {
+        //std::cout << "Post time already in timestamps" <<std::endl;
+        Message new_msg;
+        new_msg.set_username(post.user);
+        new_msg.set_msg(post.post);
+        //std::cout << "Message : " << post.post << std::endl;
+
+        google::protobuf::Timestamp* timestamp = new google::protobuf::Timestamp();
+        timestamp->set_seconds(std::stoll(post.time));
+        timestamp->set_nanos(0);
+        new_msg.set_allocated_timestamp(timestamp);
+
+        stream->Write(new_msg);
+        timestamps.push_back(post.time);
+      }
+    }
+  }
+
   Status Timeline(ServerContext* context, 
 		ServerReaderWriter<Message, Message>* stream) override {
+    Message m;
+    auto local_timestamp = time(NULL);  
+    std::vector<std::string> timestamps_recorded;
+ 
+      // start a thread which periodically wakes up and reads from the file client.txt and writes to the stream
 
-      Message m;
       while (stream->Read(&m)){
         std::string user_name = m.username();
         int client_idx = clientMap[user_name];
-        //Client* user = &client_db[client_idx];
 
-        //read the string from the Message and format it for writing
-
+        if (m.msg() == "UpdateTimeline"){
+          updateTimeline(stream, user_name, timestamps_recorded);
+        }
+        else{
         if (client_db[client_idx]->connected == false){ // user enters timeline mode for the first time
-          client_db[client_idx]->stream = stream;
+            client_db[client_idx]->connected = true;
+            client_db[client_idx]->stream = stream;
 
-          //write the string to user.txt
-          std::cout << "User " << user_name << " connected to the Timeline " <<std::endl;
-          log(INFO, user_name + " connected to timeline ");
+            //read the string from the Message and format it for writing
 
-          client_db[client_idx]->connected = true;
+            //write the string to user.txt
+            std::cout << "User " << user_name << " connected to the Timeline " <<std::endl;
+            log(INFO, user_name + " connected to timeline ");
 
-          // read the latest 20 posts from the persistent storage
-          std::vector<Post> posts = readPostsFromFile(client_db[client_idx]->user_following_file);
-          std::cout << "Read from file " << client_db[client_idx]->user_following_file << std::endl;
+            // read the latest 20 posts from the persistent storage
+            std::vector<Post> posts = readPostsFromFile(client_db[client_idx]->user_file);
+            std::cout << "Read from file " << client_db[client_idx]->user_file << std::endl;
 
-          if (posts.size()){
-            std::cout << "Size of posts = " << posts.size() << std::endl;
-          
-          // create a Message for each text and write it back to the stream
-          int start_idx = 0;
-          if (posts.size()> 20) {start_idx = posts.size() - 20;}
-          
-          for(int i = posts.size()-1; i>= start_idx; i--){
-          //for(int i = start_idx; i< posts.size(); i++){
-            Post post = posts[i];
-            Message new_msg;
-            new_msg.set_username(post.user);
-            new_msg.set_msg(post.post);
+            if (posts.size()){
+              std::cout << "Size of posts = " << posts.size() << std::endl;
+            
+            // create a Message for each text and write it back to the stream
+            int start_idx = 0;
+            if (posts.size()> 20) {start_idx = posts.size() - 20;}
+            
+            for(int i = posts.size()-1; i>= start_idx; i--){
+            //for(int i = start_idx; i< posts.size(); i++){
+              Post post = posts[i];
+              Message new_msg;
+              new_msg.set_username(post.user);
+              new_msg.set_msg(post.post);
+              //std::cout << "Message : " << post.post << std::endl;
 
-            google::protobuf::Timestamp* timestamp = new google::protobuf::Timestamp();
-            timestamp->set_seconds(std::stoll(post.time));
-            timestamp->set_nanos(0);
-            new_msg.set_allocated_timestamp(timestamp);
+              google::protobuf::Timestamp* timestamp = new google::protobuf::Timestamp();
+              timestamp->set_seconds(std::stoll(post.time));
+              timestamp->set_nanos(0);
+              new_msg.set_allocated_timestamp(timestamp);
 
-            stream->Write(new_msg);
+              timestamps_recorded.push_back(post.time);
+
+              stream->Write(new_msg);
+              }
             }
-
-          }
+            //std::thread tThread(&SNSServiceImpl::timelineThread, this, stream, user_name, local_timestamp);
+            //tThread.detach();
+            
         }
         else{ // if the user is making a new post 
           auto t_seconds = m.timestamp().seconds();
           appendPostToFile(std::to_string(t_seconds), user_name, m.msg(), client_db[client_idx]->user_file); // add post to user.txt
-          appendPostToFile(std::to_string(t_seconds), user_name, m.msg(), client_db[client_idx]->user_following_file); // add post to user_following.txt 
+          appendPostToFile(std::to_string(t_seconds), user_name, m.msg(), client_db[client_idx]->user_timeline_file); // add post to user_timeline.txt
           
           //send the same message back to the user timeline
-          stream->Write(m);
+          //stream->Write(m);
 
           // write to all the clients who follow the current user
           for (const Client* _client:  client_db[client_idx]->client_followers){
             // check if the client is connected in timeline mode
+            appendPostToFile(std::to_string(t_seconds), user_name, m.msg(), _client->user_file);
             if (_client->connected){
-              std::cout << "Writing to stream with user message" <<std::endl;
-              _client->stream->Write(m);
+              //std::cout << "Writing to stream with user message" <<std::endl;
+              //_client->stream->Write(m);
             }
 
-            //append to formatted message _client_following.txt 
-            appendPostToFile(std::to_string(t_seconds), user_name, m.msg(), _client->user_following_file);
+            // if we are the master, forward the timeline request to workers if they are connected
+            if (isMaster && workerConnected){
+              ClientContext context;
+              Request request;
+              Reply reply;
+              request.set_username(user_name);
+              request.set_type("Timeline");
+              request.set_message(m.msg());
+              request.set_timestamp(std::to_string(t_seconds));
+
+              Status status = worker_stub->Sync(&context, request, &reply);
+            }  
           }
         }
+        }
+
       }
     
     return Status::OK;
@@ -537,6 +625,8 @@ class SNSServiceImpl final : public SNSService::Service {
       directoryNameStream << "server_" << clusterID_int << "_" << serverID;
       std::string directoryName = directoryNameStream.str();
       ServerdirName = directoryName + '/';
+      AllUsersFile = ServerdirName + "AllUsers.txt";
+      LocalUsersFile = ServerdirName + "LocalUsers.txt";
 
       // check if recovery file exists
       if (directoryExists(directoryName)) 
@@ -556,6 +646,7 @@ class SNSServiceImpl final : public SNSService::Service {
             new_client->user_file = ServerdirName + clientName + ".txt";
             new_client->user_following_file = ServerdirName + clientName + "_following.txt";
             new_client->user_follower = ServerdirName + clientName + "_follower.txt";
+            new_client->user_timeline_file = ServerdirName + clientName + "_timeline.txt";
             new_client->online = false;
 
             // add the client to the database
@@ -581,12 +672,112 @@ class SNSServiceImpl final : public SNSService::Service {
         } else {
           std::cerr << "Failed to create the directory." << std::endl;
         }
-        // create a file called AllUsers.txt
-        AllUsersFile = ServerdirName + "AllUsers.txt";
+
         createEmptyFile(AllUsersFile);
+        createEmptyFile(LocalUsersFile);
       }
 
       // create all clients object and update datastructures
+    }
+
+    void SyncDataBase(){
+      
+      std::cout << "Sync Thread started" <<std::endl;
+      while (true){
+      // sleep for 10s 
+      sleep(10);
+      //std::cout << "Syncing database" <<std::endl;
+      // read the AllUsers.txt file and update the clientMap
+      auto total_users = get_lines_from_file(AllUsersFile);
+
+      //std::cout << "Total users in" <<  AllUsersFile << " = " << total_users.size() << std::endl;
+
+      // sync users
+      for (auto user: total_users){
+        // if users in total_users not in clinet_db then create new client and add to client_db
+        if (clientMap.find(user) == clientMap.end()){
+          // create all client objects
+          Client* new_client = new Client;
+          new_client->username = user;
+          new_client->online = false;
+
+          // add the client to the database
+          clientMap[user] = client_count;
+          client_db.push_back(new_client);
+          
+          //increment the client counter
+          client_count++;
+
+          // if we are the master, forward the login request to workers if they are connected
+          if (isMaster && workerConnected){
+            ClientContext context;
+            Request request;
+            Reply reply;
+            request.set_username(user);
+            request.set_type("Login");
+            Status status = worker_stub->Sync(&context, request, &reply);
+            if (status.ok()){
+              //std::cout << "Login request sent to all workers" <<std::endl;
+            }
+            else{
+              //std::cout << "Login request not sent to all workers" <<std::endl;
+            }
+          }
+        }
+      }
+
+      // sync follower relationships
+      auto local_users = get_lines_from_file(LocalUsersFile);
+      for(auto local: local_users){
+        // find local in client_db
+        int client_idx = clientMap[local];
+        Client* user = client_db[client_idx];
+
+        // read the user_follower.txt file
+        auto followers = get_lines_from_file(user->user_follower);
+
+        // for all the followers, if the follower is not in user->client_followers, then add to user->client_followers
+        // Check if user_name is already following follow_name
+        for (auto follower: followers){
+          bool follower_exists = false;
+          for (const Client* client : user->client_followers) {
+            if (client->username == follower) {
+              follower_exists = true;
+              break;
+            }
+          }
+
+          if(!follower_exists){
+            // find follower in client_db
+            int follower_idx = clientMap[follower];
+            Client* follower_client = client_db[follower_idx];
+
+            // add follower_client to user->client_followers
+            user->client_followers.push_back(follower_client);
+          
+            // if we are the master, forward the follow request to workers if they are connected
+            if (isMaster && workerConnected){
+              ClientContext context;
+              Request request;
+              Reply reply;
+              request.set_username(user->username);
+              request.set_type("Follow");
+              request.add_arguments(follower);
+              Status status = worker_stub->Sync(&context, request, &reply);
+              if (status.ok()){
+                //std::cout << "Login request sent to all workers" <<std::endl;
+              }
+              else{
+                //std::cout << "Login request not sent to all workers" <<std::endl;
+              }
+            }
+          }
+        }
+      }
+
+      // Sync timeline
+
+      }
     }
 
 };
@@ -622,7 +813,7 @@ void HeartBeat(std::string coordinator_address, int serverID, std::string hostna
       std::cout << "KA not sent." <<std::endl;
     }
     // send heartbeat or KA messages to the coordinator
-    sleep(2);
+    sleep(5);
   }
 }
 
@@ -636,7 +827,11 @@ void RunServer(std::string port_no, std::string clusterID, int serverID) {
   std::cout << "Server listening on " << server_address << std::endl;
   log(INFO, "Server listening on "+server_address);
 
+  // start a thread to run SyncDataBase in service 
 
+  std::thread SyncThread(&SNSServiceImpl::SyncDataBase, &service);
+  SyncThread.detach();
+  
   log(INFO, "Server starting...");
   server->Wait();
 }

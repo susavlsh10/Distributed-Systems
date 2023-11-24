@@ -226,6 +226,7 @@ class CoordServiceImpl final : public CoordService::Service {
     replyinfo->set_type(master->type);
     replyinfo->set_master(true);
     replyinfo->set_clusterid(master->clusterID);
+    //replyinfo->set_connected(true);
 
 
     //confirmation->set_status(true);
@@ -234,7 +235,7 @@ class CoordServiceImpl final : public CoordService::Service {
 
   // implement GetSynchronizer
   Status GetSynchronizer(ServerContext* context, const ID* id, ServerInfo* serverinfo) override {
-    std::cout<<"Got GetSynchronizer for Cluster ID: "<<id->id()<<std::endl; 
+    //std::cout<<"Got GetSynchronizer for Cluster ID: "<<id->id()<<std::endl; 
     log(INFO, "Got GetSynchronizer for Cluster ID "+ id->id());
     int clusterID = id->id();
 
