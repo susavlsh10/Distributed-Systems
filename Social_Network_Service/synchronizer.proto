@@ -9,13 +9,15 @@ import "google/protobuf/timestamp.proto";
 // The synchronizer service definition.
 service SynchService {
     // update user file
-    rpc SyncUsers (SyncRequest) returns (stream SyncReply) {}
+    rpc SyncUsers (SyncRequest) returns (SyncReply) {}
 
     // update follower file
-    rpc SyncFollowers (SyncRequest) returns (stream SyncReply) {}
+    rpc SyncFollowers (SyncRequest) returns (SyncReply) {}
 
     // update timeline
-    rpc SyncTimeline (SyncRequest) returns (stream SyncReply) {}
+    rpc SyncTimeline (timelineRequest) returns (SyncReply) {}
+
+    rpc UpdateMaster (MasterInfo) returns (SyncReply) {}
 
 }
 
@@ -25,6 +27,8 @@ message SyncRequest {
   repeated string users = 2;
   string type = 3; //follow, unfollow
   int32 ClusterID = 4;
+  string username = 5;
+  string followname = 6;
 }
 
 // The response message containing the greetings
@@ -33,3 +37,14 @@ message SyncReply {
   bool success = 1;
 }
 
+message timelineRequest {
+  string username = 1;
+  repeated string message = 2;
+  repeated string timestamp = 3;
+  string follower_name = 4; 
+}
+
+message MasterInfo{
+  int32 serverID = 1;
+  int32 clusterID = 2;
+}
