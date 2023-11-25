@@ -1,6 +1,6 @@
 syntax = "proto3";
 package csce438;
-import "google/protobuf/timestamp.proto";
+//import "google/protobuf/timestamp.proto";
 
 // ------------------------------------------------------------
 // The coordinator service definition
@@ -59,5 +59,46 @@ message Status{
 }
 
 
+// The synchronizer service definition.
+service SynchService {
+  // update user file
+  rpc SyncUsers (SyncRequest) returns (SyncReply) {}
 
+  // update follower file
+  rpc SyncFollowers (SyncRequest) returns (SyncReply) {}
+
+  // update timeline
+  rpc SyncTimeline (timelineRequest) returns (SyncReply) {}
+
+  rpc UpdateMaster (MasterInfo) returns (SyncReply) {}
+
+}
+
+// The request message containing the user's name.
+message SyncRequest {
+string message = 1;
+repeated string users = 2;
+string type = 3; //follow, unfollow
+int32 ClusterID = 4;
+string username = 5;
+string followname = 6;
+}
+
+// The response message containing the greetings
+message SyncReply {
+//string message = 1;
+bool success = 1;
+}
+
+message timelineRequest {
+string username = 1;
+repeated string message = 2;
+repeated string timestamp = 3;
+string follower_name = 4; 
+}
+
+message MasterInfo{
+int32 serverID = 1;
+int32 clusterID = 2;
+}
 

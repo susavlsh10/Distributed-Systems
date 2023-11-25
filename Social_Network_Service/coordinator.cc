@@ -21,7 +21,7 @@
 #define log(severity, msg) LOG(severity) << msg; google::FlushLogFiles(google::severity); 
 
 #include "coordinator.grpc.pb.h"
-#include "synchronizer.grpc.pb.h"
+//#include "synchronizer.grpc.pb.h"
 
 using google::protobuf::Timestamp;
 using google::protobuf::Duration;

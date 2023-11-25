@@ -23,7 +23,7 @@
 
 #include "sns.grpc.pb.h"
 #include "coordinator.grpc.pb.h"
-#include "synchronizer.grpc.pb.h"
+//#include "synchronizer.grpc.pb.h"
 
 #include "utils.h"
 

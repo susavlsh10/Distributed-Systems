@@ -34,16 +34,16 @@ PROTOS_PATH = .
 
 all: system-check tsc tsd coordinator synchronizer
 
-tsc: client.o coordinator.pb.o coordinator.grpc.pb.o sns.pb.o sns.grpc.pb.o utils.o tsc.o synchronizer.pb.o
+tsc: client.o coordinator.pb.o coordinator.grpc.pb.o sns.pb.o sns.grpc.pb.o utils.o tsc.o 
 	$(CXX) $^ $(LDFLAGS) -g -o $@
 
-tsd: coordinator.pb.o coordinator.grpc.pb.o sns.pb.o sns.grpc.pb.o utils.o tsd.o synchronizer.pb.o
+tsd: coordinator.pb.o coordinator.grpc.pb.o sns.pb.o sns.grpc.pb.o utils.o tsd.o 
 	$(CXX) $^ $(LDFLAGS) -g -o $@
 
-coordinator: coordinator.pb.o coordinator.grpc.pb.o utils.o coordinator.o synchronizer.pb.o synchronizer.grpc.pb.o
+synchronizer: synchronizer.o coordinator.pb.o utils.o coordinator.grpc.pb.o
 	$(CXX) $^ $(LDFLAGS) -g -o $@
 
-synchronizer: synchronizer.pb.o synchronizer.grpc.pb.o synchronizer.o coordinator.pb.o utils.o coordinator.grpc.pb.o
+coordinator: coordinator.pb.o coordinator.grpc.pb.o utils.o coordinator.o
 	$(CXX) $^ $(LDFLAGS) -g -o $@
 
 utils.o: utils.cc utils.h
