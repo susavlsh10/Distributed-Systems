@@ -58,7 +58,7 @@ utils.o: utils.cc utils.h
 	$(PROTOC) -I $(PROTOS_PATH) --cpp_out=. $<
 
 clean:
-	rm -f *.txt *.o *.pb.cc *.pb.h tsc tsd coordinator 
+	rm -f *.txt *.o *.pb.cc *.pb.h tsc tsd coordinator synchronizer
 
 
 # The following is to test your system and ensure a smoother experience.
